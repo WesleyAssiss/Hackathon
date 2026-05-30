@@ -2,11 +2,11 @@
 // v5 — verdict-focused UX with phase timeline and vote breakdown.
 
 const PERSONAS = {
-  cfo:       { label: "CFO",       color: "#38bdf8", side: "con", emoji: "💰" },
-  cto:       { label: "CTO",       color: "#fb923c", side: "pro", emoji: "🛠️" },
-  customer:  { label: "Cliente",   color: "#c084fc", side: "con", emoji: "🧑" },
-  red_team:  { label: "Red-Team",  color: "#f87171", side: "con", emoji: "🚨" },
-  historian: { label: "Historiador", color: "#facc15", side: "pro", emoji: "📚" },
+  cfo:       { label: "CFO",       color: "#38bdf8", fill: "#1a4a6a", glow: "rgba(56,189,248,0.55)",  side: "con", emoji: "💰" },
+  cto:       { label: "CTO",       color: "#fb923c", fill: "#5c2a08", glow: "rgba(251,146,60,0.55)",  side: "pro", emoji: "🛠️" },
+  customer:  { label: "Cliente",   color: "#c084fc", fill: "#361060", glow: "rgba(192,132,252,0.55)", side: "con", emoji: "🧑" },
+  red_team:  { label: "Red-Team",  color: "#f87171", fill: "#5c1212", glow: "rgba(248,113,113,0.55)", side: "con", emoji: "🚨" },
+  historian: { label: "Historiador", color: "#facc15", fill: "#4a3800", glow: "rgba(250,204,21,0.55)", side: "pro", emoji: "📚" },
 };
 const KIND_GLYPH = { propose: "◆", critique: "✕", defend: "▲", concede: "~" };
 const KIND_LABEL = { propose: "propôs", critique: "criticou", defend: "defendeu", concede: "concedeu" };
@@ -301,13 +301,13 @@ function handleClaim(payload) {
     level: Math.max(0, lastRound) * 4 + (_KIND_LEVEL[payload.kind] || 0),
     color: {
       border: p.color,
-      background: palette.fill,
-      highlight: { border: "#fafafa", background: palette.fill },
-      hover: { border: "#fafafa", background: palette.fill },
+      background: p.fill,
+      highlight: { border: "#fafafa", background: p.fill },
+      hover: { border: "#fafafa", background: p.fill },
     },
     borderWidth: 3,
     size: nodeSize,
-    shadow: { enabled: true, color: palette.glow, size: 22, x: 0, y: 0 },
+    shadow: { enabled: true, color: p.glow, size: 22, x: 0, y: 0 },
     font: { size: 16, face: "Inter, system-ui", color: "#fafafa", strokeWidth: 6, strokeColor: "#0a0a0a", vadjust: -4, bold: { size: 16, color: "#fafafa" } },
   });
   // Auto-fit every time a new node lands so o grafo nunca fica encolhido num canto
@@ -391,12 +391,12 @@ function handleScore(payload) {
       id: payload.claim_id,
       color: {
         border: "#22c55e",
-        background: "#052e16",
-        highlight: { border: "#86efac", background: "#064e3b" },
-        hover: { border: "#86efac", background: "#064e3b" },
+        background: p.fill,
+        highlight: { border: "#86efac", background: p.fill },
+        hover: { border: "#86efac", background: p.fill },
       },
-      borderWidth: 4,
-      shadow: { enabled: true, color: "rgba(34,197,94,0.65)", size: 24, x: 0, y: 0 },
+      borderWidth: 5,
+      shadow: { enabled: true, color: "rgba(34,197,94,0.70)", size: 28, x: 0, y: 0 },
     });
   } else {
     rejected.add(payload.claim_id);
