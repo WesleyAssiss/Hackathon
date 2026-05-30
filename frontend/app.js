@@ -68,34 +68,31 @@ const network = new vis.Network(graphContainer, { nodes, edges }, {
     width: 1.8,
     selectionWidth: 2,
     arrows: { to: { enabled: true, scaleFactor: 0.65, type: "arrow" } },
-    smooth: { enabled: true, type: "continuous", roundness: 0.45 },
+    smooth: { enabled: true, type: "cubicBezier", forceDirection: "horizontal", roundness: 0.5 },
     font: {
       color: "#a1a1aa", size: 9, face: "JetBrains Mono",
       strokeWidth: 4, strokeColor: "#0a0a0a", align: "middle",
     },
     hoverWidth: 0.7,
   },
-  physics: {
-    enabled: true,
-    solver: "forceAtlas2Based",
-    forceAtlas2Based: {
-      gravitationalConstant: -55,
-      centralGravity: 0.012,
-      springLength: 130,
-      springConstant: 0.06,
-      damping: 0.62,
-      avoidOverlap: 0.85,
-    },
-    stabilization: { enabled: true, iterations: 220, updateInterval: 25, fit: true },
-    timestep: 0.4,
-    minVelocity: 0.6,
-  },
+  physics: { enabled: false },
   interaction: {
-    hover: true, tooltipDelay: 120, hideEdgesOnDrag: true,
+    hover: true, hideEdgesOnDrag: false,
     navigationButtons: false, keyboard: false,
     multiselect: false, zoomView: true, dragView: true,
   },
-  layout: { improvedLayout: true, randomSeed: 42 },
+  layout: {
+    hierarchical: {
+      enabled: true,
+      direction: "LR",
+      levelSeparation: 150,
+      nodeSpacing: 85,
+      treeSpacing: 80,
+      blockShifting: true,
+      edgeMinimization: true,
+      parentCentralization: true,
+    }
+  },
 });
 
 // --- Theater overlays ---------------------------------------------------
@@ -145,12 +142,8 @@ network.on("blurNode", () => hideDetailPanel());
 network.on("selectNode", (e) => { if (e.nodes[0]) showDetailPanel(e.nodes[0]); });
 network.on("deselectNode", () => hideDetailPanel());
 network.on("afterDrawing", refreshGraphStats);
-network.on("stabilizationIterationsDone", () => {
-  try { network.fit({ animation: { duration: 700, easingFunction: "easeInOutQuad" } }); } catch {}
-});
-
 // Toolbar controls
-let _physicsOn = true;
+let _physicsOn = false;
 let _survivorsOnly = false;
 document.getElementById("graph-fit")?.addEventListener("click", () => {
   network.fit({ animation: { duration: 600, easingFunction: "easeInOutQuad" } });
@@ -301,10 +294,11 @@ function handleClaim(payload) {
   const conf = Math.max(0.15, Math.min(1, payload.confidence || 0.5));
   const nodeSize = 28 + conf * 22;  // 28..50 — bem maior pra leitura
 
+  const _KIND_LEVEL = { propose: 0, critique: 1, concede: 1, defend: 2 };
   nodes.add({
     id: payload.claim_id,
     label: `${p.emoji} ${p.label}`,
-    title: `[${KIND_LABEL[payload.kind]}] ${p.label}\n\n${payload.statement}\n\nConfiança: ${(payload.confidence*100).toFixed(0)}%  ·  ${payload.citations.length} citações`,
+    level: Math.max(0, lastRound) * 4 + (_KIND_LEVEL[payload.kind] || 0),
     color: {
       border: p.color,
       background: palette.fill,
@@ -323,16 +317,13 @@ function handleClaim(payload) {
   }, 250);
   (payload.targets || []).forEach(t => {
     if (nodes.get(t)) {
-      const label = payload.kind === "critique" ? "refuta" : payload.kind === "defend" ? "apoia" : payload.kind === "concede" ? "concede" : "";
       const color = palette.stroke;
-      const dashes = payload.kind === "defend" ? false : payload.kind === "concede" ? [4, 4] : false;
+      const dashes = payload.kind === "concede" ? [5, 4] : false;
       edges.add({
-        from: payload.claim_id, to: t,
-        label, font: { color, strokeColor: "#0a0a0a", size: 13, strokeWidth: 4, face: "Inter, system-ui" },
-        color: { color, opacity: 0.75, highlight: "#fafafa" },
-        width: 2.2 + conf * 1.8,
+        from: t, to: payload.claim_id,
+        color: { color, opacity: 0.80, highlight: "#fafafa" },
+        width: 2.0 + conf * 1.6,
         dashes,
-        smooth: { enabled: true, type: "curvedCW", roundness: 0.22 },
       });
     }
   });
