@@ -211,7 +211,7 @@
   <main class="max-w-[1600px] mx-auto px-4 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 lg:items-start gap-5">
 
     <!-- LEFT: roster + round-by-round counter -->
-    <aside class="lg:col-span-3 space-y-4 order-2 lg:order-1">
+    <aside class="lg:col-span-3 space-y-4 order-2 lg:order-1 lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto">
       <div class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40">
         <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold flex items-center gap-2">
           <span>👥 Conselho</span>
@@ -355,7 +355,7 @@
     </section>
 
     <!-- RIGHT: surviving args + transcript -->
-    <aside class="lg:col-span-3 space-y-4 order-3">
+    <aside class="lg:col-span-3 space-y-4 order-3 lg:sticky lg:top-[80px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto">
       <div id="survivors-card" class="rounded-2xl border border-emerald-500/30 p-5 bg-gradient-to-b from-emerald-500/5 to-zinc-900/40 hidden">
         <h3 class="text-[11px] uppercase tracking-wider text-emerald-300 mb-2 font-semibold flex items-center gap-1.5">
           <span>🏆 Argumentos vencedores</span>
@@ -395,7 +395,7 @@
           <span>💬 Transcrição ao vivo</span>
           <button id="transcript-toggle" class="text-[10px] normal-case font-normal text-zinc-500 hover:text-zinc-300">esconder</button>
         </h3>
-        <ul id="transcript" class="space-y-3 text-xs max-h-[440px] overflow-y-auto pr-1"></ul>
+        <ul id="transcript" class="space-y-3 text-xs pr-1"></ul>
       </div>
     </aside>
 
