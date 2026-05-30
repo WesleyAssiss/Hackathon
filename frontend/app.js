@@ -222,37 +222,52 @@ function reset() {
   Object.keys(claimIndex).forEach(k => delete claimIndex[k]);
 }
 
-function updateRoundsList() {
+function updateRoundsList(totalExpected) {
   const rl = document.getElementById("rounds-list");
   const rounds = Object.keys(roundStats).map(Number).sort((a, b) => a - b);
-  if (rounds.length === 0) {
+  const maxIdx = totalExpected != null ? totalExpected - 1
+               : (rounds.length > 0 ? Math.max(...rounds) : -1);
+  if (maxIdx < 0) {
     rl.innerHTML = '<li class="text-zinc-600 italic">Rodadas aparecerão aqui…</li>';
     return;
   }
-  rl.innerHTML = rounds.map(r => {
-    const s = roundStats[r];
-    const total = s.claims;
-    const surv = s.survived;
-    const rej = s.rejected;
-    const pending = total - surv - rej;
-    const pct = total > 0 ? Math.round((surv / total) * 100) : 0;
-    return `
-      <li class="anim-in border-l-2 border-zinc-700 pl-3 py-1">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="font-bold text-zinc-200">Rodada ${r + 1}</span>
-          <span class="text-zinc-500 mono text-[10px]">${total} claims</span>
-        </div>
-        <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden flex">
-          <div class="bg-emerald-500" style="width:${total ? (surv/total*100) : 0}%"></div>
-          <div class="bg-rose-500/60" style="width:${total ? (rej/total*100) : 0}%"></div>
-          <div class="bg-zinc-700" style="width:${total ? (pending/total*100) : 0}%"></div>
-        </div>
-        <div class="flex justify-between text-[10px] mt-1 mono">
-          <span class="text-emerald-400">✓ ${surv} sobreviveram</span>
-          <span class="text-rose-400">✕ ${rej} caíram</span>
-        </div>
-      </li>`;
-  }).join("");
+  const items = [];
+  for (let r = 0; r <= maxIdx; r++) {
+    if (roundStats[r]) {
+      const s = roundStats[r];
+      const total = s.claims;
+      const surv = s.survived;
+      const rej = s.rejected;
+      const pending = total - surv - rej;
+      items.push(`
+        <li class="anim-in border-l-2 border-zinc-700 pl-3 py-1">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-bold text-zinc-200">Rodada ${r + 1}</span>
+            <span class="text-zinc-500 mono text-[10px]">${total} claims</span>
+          </div>
+          <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden flex">
+            <div class="bg-emerald-500" style="width:${total ? (surv/total*100) : 0}%"></div>
+            <div class="bg-rose-500/60" style="width:${total ? (rej/total*100) : 0}%"></div>
+            <div class="bg-zinc-700" style="width:${total ? (pending/total*100) : 0}%"></div>
+          </div>
+          <div class="flex justify-between text-[10px] mt-1 mono">
+            <span class="text-emerald-400">✓ ${surv} sobreviveram</span>
+            <span class="text-rose-400">✕ ${rej} caíram</span>
+          </div>
+        </li>`);
+    } else {
+      // Rodada configurada mas não executada — consenso antecipado
+      items.push(`
+        <li class="border-l-2 border-zinc-700/30 pl-3 py-1 opacity-40">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-bold text-zinc-500">Rodada ${r + 1}</span>
+            <span class="text-[10px] text-zinc-600 italic">não realizada</span>
+          </div>
+          <div class="text-[10px] text-zinc-600 italic">Consenso atingido antes desta rodada</div>
+        </li>`);
+    }
+  }
+  rl.innerHTML = items.join("");
 }
 
 // ---------- SSE handlers ------------------------------------------------
@@ -330,13 +345,21 @@ function handleClaim(payload) {
                 : payload.kind === "defend" ? "bg-emerald-500/15 text-emerald-300"
                 : payload.kind === "concede" ? "bg-amber-500/15 text-amber-300"
                 : "bg-sky-500/15 text-sky-300";
+  const kindLabel = payload.kind === "critique" ? "critica"
+                  : payload.kind === "defend" ? "defende"
+                  : payload.kind === "concede" ? "concede"
+                  : "propõe";
+  const strippedStmt = stripMeta(payload.statement);
+  const stmtHtml = strippedStmt
+    ? `<div class="text-zinc-300 leading-relaxed break-words">${escapeHtml(strippedStmt)}</div>`
+    : `<div class="text-zinc-500 italic text-[10px]">${payload.kind === "concede" ? "Concessão — argumento aceito sem contestação" : "Resposta interna do conselheiro"}</div>`;
   li.innerHTML = `
     <div class="flex items-center gap-2 mb-1">
-      <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${kindCls}">${payload.kind}</span>
+      <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${kindCls}">${kindLabel}</span>
       <span class="font-semibold text-[11px]" style="color:${p.color}">${p.emoji} ${p.label}</span>
       <span class="text-zinc-500 text-[10px] ml-auto mono">${(payload.confidence * 100).toFixed(0)}% · ${payload.citations.length}cit</span>
     </div>
-    <div class="text-zinc-300 leading-relaxed break-words">${escapeHtml(payload.statement)}</div>`;
+    ${stmtHtml}`;
   const tEl = document.getElementById("transcript");
   tEl.appendChild(li);
   tEl.scrollTop = tEl.scrollHeight;
@@ -581,6 +604,10 @@ function handleDossier(d) {
     }
   }
 
+  // Finaliza o afunilamento mostrando TODAS as rodadas configuradas,
+  // incluindo as não-executadas (consenso antecipado)
+  updateRoundsList(_selectedRounds);
+
   // Surviving args card — pick top 4 highest-confidence survivors
   const topSurvivors = [...survived]
     .map(id => claimIndex[id])
@@ -652,8 +679,12 @@ function escapeHtml(s) {
 // Remove debate-internal meta-language before showing claims/risks to the user.
 // Mirrors backend aura_bot._strip_meta — same prefixes, same fallback logic.
 const _META_RE = /^\s*(Concordo(?:\s*com isso)?[,;]?\s*(?:mas\s*)?(?:é importante notar que\s*|que\s*)?|Discordo(?:\s*com isso)?[,;]?\s*(?:pois\s*|porque\s*|mas\s*)?|Mantenho (?:a|minha) posição[,;]?\s*(?:porque\s*|pois\s*)?|Devemos (?:rejeitar|apoiar)[^,;]+[,;]\s*|Afirmo que\s*|Considero que\s*)/i;
+// Palavras que são pura meta-linguagem interna sem conteúdo para o usuário
+const _PURE_META_RE = /^(concedo|concede|concordo|discordo|refuto|aceito|aceitar|ok|sim|não|nao|certo|correto)\.?[!?]?$/i;
 function stripMeta(text) {
   const cleaned = text.replace(_META_RE, "").replace(/^["'.,;:\-\s.\u2026]+/, "").trim();
+  // Se o que sobrou é pura meta-palavra sem conteúdo real, retorna vazio
+  if (_PURE_META_RE.test(cleaned) || _PURE_META_RE.test(text.trim())) return "";
   if (cleaned.length < 20) return text;
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
