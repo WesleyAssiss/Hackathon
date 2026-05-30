@@ -181,6 +181,7 @@ const survived = new Set(); // claim_ids
 const rejected = new Set();
 const roundStats = {};   // round -> {claims, survived, rejected}
 let lastRound = -1;
+let _selectedRounds = 3;  // rodadas que o usuário escolheu; atualizado em startDebate()
 
 function setPhase(phase) {
   const idx = PHASES.indexOf(phase);
@@ -216,6 +217,9 @@ function reset() {
   document.getElementById("graph-stats")?.classList.add("hidden");
   document.getElementById("graph-detail")?.classList.add("hidden");
   document.getElementById("status-dot").className = "w-2 h-2 rounded-full bg-zinc-600";
+  document.getElementById("all-claims-card")?.classList.add("hidden");
+  document.getElementById("convergence-note")?.classList.add("hidden");
+  Object.keys(claimIndex).forEach(k => delete claimIndex[k]);
 }
 
 function updateRoundsList() {
@@ -564,7 +568,20 @@ function handleDossier(d) {
     document.getElementById("tel-cache").textContent = tel.embed_cache_hits ?? 0;
   }
 
-  // Surviving args card — pick top 3 highest-confidence survivors
+  // Nota de convergência antecipada — explica ao usuário leigo por que o
+  // debate terminou em menos rodadas do que ele configurou.
+  const roundsRun = Array.isArray(d.rounds) ? d.rounds.length : _selectedRounds;
+  const cnEl = document.getElementById("convergence-note");
+  if (cnEl) {
+    if (roundsRun < _selectedRounds) {
+      cnEl.textContent = `⚡ Convergência antecipada: o conselho atingiu consenso em ${roundsRun} de ${_selectedRounds} rodadas — mais rodadas não mudariam o resultado.`;
+      cnEl.classList.remove("hidden");
+    } else {
+      cnEl.classList.add("hidden");
+    }
+  }
+
+  // Surviving args card — pick top 4 highest-confidence survivors
   const topSurvivors = [...survived]
     .map(id => claimIndex[id])
     .filter(c => c)
@@ -596,6 +613,36 @@ function handleDossier(d) {
   cfEl.innerHTML = d.counterfactuals.map(cf =>
     `<li class="break-words"><span class="text-amber-400 font-semibold mono">${(cf.probability*100).toFixed(0)}%</span> · ${escapeHtml(cf.description)}</li>`
   ).join("") || '<li class="text-zinc-500 italic">Nenhum cenário relevante.</li>';
+
+  // Todos os argumentos — visão completa: sobreviventes + rejeitados
+  const allIds = Object.keys(claimIndex);
+  if (allIds.length > 0) {
+    document.getElementById("all-claims-card").classList.remove("hidden");
+    const survList = allIds.filter(id => survived.has(id))
+      .map(id => claimIndex[id])
+      .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    const rejList = allIds.filter(id => !survived.has(id))
+      .map(id => claimIndex[id])
+      .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    const _renderClaimLi = c => {
+      const p = PERSONAS[c.persona];
+      if (!p) return "";
+      return `<li class="rounded-md p-2 bg-zinc-900/60 border-l-2 mb-1.5" style="border-color:${p.color}">
+        <div class="flex items-center gap-1.5 mb-0.5">
+          <span class="text-xs">${p.emoji}</span>
+          <span class="font-semibold text-[10px]" style="color:${p.color}">${p.label}</span>
+          <span class="text-zinc-500 text-[10px] mono ml-auto">${(c.confidence*100).toFixed(0)}%</span>
+        </div>
+        <div class="text-zinc-400 text-[11px] leading-snug break-words">${escapeHtml(stripMeta(c.statement))}</div>
+      </li>`;
+    };
+    document.getElementById("all-survivors").innerHTML =
+      survList.map(_renderClaimLi).join("") ||
+      '<li class="text-zinc-600 italic text-[11px]">Nenhum sobrevivente.</li>';
+    document.getElementById("all-rejected").innerHTML =
+      rejList.map(_renderClaimLi).join("") ||
+      '<li class="text-zinc-600 italic text-[11px]">Nenhum rejeitado.</li>';
+  }
 }
 
 function escapeHtml(s) {
@@ -617,6 +664,7 @@ async function startDebate() {
   if (question.length < 10) { alert("Pergunta deve ter ao menos 10 caracteres."); return; }
   const context = document.getElementById("context").value.trim() || null;
   const rounds = parseInt(document.getElementById("rounds").value, 10);
+  _selectedRounds = rounds;
   const mode = document.getElementById("mode")?.value || "free";
   const ghModel = document.getElementById("gh-model")?.value || null;
 

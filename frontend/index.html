@@ -276,6 +276,8 @@
             <span class="px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400" title="Embeddings">🧬 <span id="tel-emb" class="text-zinc-200"></span> embed</span>
             <span class="px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400" title="Cache hits">💾 <span id="tel-cache" class="text-emerald-200"></span> cached</span>
           </div>
+          <!-- Nota de convergência antecipada: aparece só quando debate encerrou antes das rodadas pedidas -->
+          <div id="convergence-note" class="hidden mt-1 text-[10px] text-sky-400 mono"></div>
 
           <!-- ⑤ Share / Export row -->
           <div class="flex items-center gap-2 pt-3 border-t border-zinc-800/60">
@@ -374,6 +376,20 @@
         </details>
       </div>
 
+      <!-- Todos os argumentos: visão completa para quem quer entender tudo -->
+      <div id="all-claims-card" class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40 hidden">
+        <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-1 font-semibold">📜 Todos os argumentos</h3>
+        <p class="text-[10px] text-zinc-600 mb-3">Visão completa do debate — o que sobreviveu e o que foi refutado</p>
+        <details open class="text-xs mb-2">
+          <summary class="cursor-pointer text-emerald-400 hover:text-emerald-300 font-semibold py-1">✓ Aprovados pelo conselho</summary>
+          <ul id="all-survivors" class="mt-2 space-y-1.5"></ul>
+        </details>
+        <details class="text-xs">
+          <summary class="cursor-pointer text-rose-400 hover:text-rose-300 font-semibold py-1">✗ Refutados pelo conselho</summary>
+          <ul id="all-rejected" class="mt-2 space-y-1.5"></ul>
+        </details>
+      </div>
+
       <div class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40">
         <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold flex items-center justify-between">
           <span>💬 Transcrição ao vivo</span>
@@ -389,6 +405,6 @@
     Zero dados confidenciais · 100% datasets sintéticos · Provenance auditável por trace
   </footer>
 
-  <script src="/static/app.js?v=14"></script>
+  <script src="/static/app.js?v=15"></script>
 </body>
 </html>
