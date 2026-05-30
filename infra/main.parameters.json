@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName":          { "value": "aura" },
+    "containerImage":   { "value": "" },
+    "aoaiDeployment":   { "value": "gpt-4.1" },
+    "aoaiApiVersion":   { "value": "2024-10-21" },
+    "knowledgeIndex":   { "value": "aura-corpus" }
+  }
+}

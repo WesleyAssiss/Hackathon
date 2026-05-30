@@ -1,0 +1,112 @@
+{
+  "question": "Devemos adquirir a ACME por 50M?",
+  "mode": "mock",
+  "rounds": 3,
+  "runs": [
+    {
+      "aura": {
+        "approach": "aura_council",
+        "elapsed_s": 0.005,
+        "rounds_run": 3,
+        "claims_total": 11,
+        "claims_survived": 0,
+        "citations_total": 16,
+        "personas_active": {
+          "cfo": 3,
+          "cto": 3,
+          "customer": 2,
+          "red_team": 2,
+          "historian": 1
+        },
+        "risk_dimensions_explored": 4,
+        "posterior_confidence": 0.5,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0,
+        "ci_width": 1.0,
+        "recommendation": "PROSSEGUIR COM RESSALVAS (confiança 50%). Decisão baseada em 0 afirmações sobreviventes ao protocolo PCDR sobre a questão: Devemos adquirir a ACME por 50M?",
+        "surviving_risks": [],
+        "counterfactuals_generated": 3
+      },
+      "baseline": {
+        "approach": "single_agent_baseline",
+        "elapsed_s": 0.0,
+        "claims_total": 1,
+        "claims_survived": 1,
+        "citations_total": 0,
+        "personas_active": {
+          "single": 1
+        },
+        "risk_dimensions_explored": 1,
+        "posterior_confidence": null,
+        "ci_lo": null,
+        "ci_hi": null,
+        "ci_width": null,
+        "recommendation": "[mock response] persona-system='Voce e um analista executivo. Responda e...' user='Devemos adquirir a ACME por 50M?...'",
+        "surviving_risks": [],
+        "counterfactuals_generated": 0
+      },
+      "advantage": {
+        "risk_dimension_multiplier": 4.0,
+        "citation_multiplier": 16.0,
+        "auditable_dossier": true,
+        "adversarial_coverage": true,
+        "calibrated_uncertainty": true
+      }
+    },
+    {
+      "aura": {
+        "approach": "aura_council",
+        "elapsed_s": 0.003,
+        "rounds_run": 3,
+        "claims_total": 11,
+        "claims_survived": 0,
+        "citations_total": 16,
+        "personas_active": {
+          "cfo": 3,
+          "cto": 3,
+          "customer": 2,
+          "red_team": 2,
+          "historian": 1
+        },
+        "risk_dimensions_explored": 4,
+        "posterior_confidence": 0.5,
+        "ci_lo": 0.0,
+        "ci_hi": 1.0,
+        "ci_width": 1.0,
+        "recommendation": "PROSSEGUIR COM RESSALVAS (confiança 50%). Decisão baseada em 0 afirmações sobreviventes ao protocolo PCDR sobre a questão: Devemos adquirir a ACME por 50M?",
+        "surviving_risks": [],
+        "counterfactuals_generated": 3
+      },
+      "baseline": {
+        "approach": "single_agent_baseline",
+        "elapsed_s": 0.0,
+        "claims_total": 1,
+        "claims_survived": 1,
+        "citations_total": 0,
+        "personas_active": {
+          "single": 1
+        },
+        "risk_dimensions_explored": 1,
+        "posterior_confidence": null,
+        "ci_lo": null,
+        "ci_hi": null,
+        "ci_width": null,
+        "recommendation": "[mock response] persona-system='Voce e um analista executivo. Responda e...' user='Devemos adquirir a ACME por 50M?...'",
+        "surviving_risks": [],
+        "counterfactuals_generated": 0
+      },
+      "advantage": {
+        "risk_dimension_multiplier": 4.0,
+        "citation_multiplier": 16.0,
+        "auditable_dossier": true,
+        "adversarial_coverage": true,
+        "calibrated_uncertainty": true
+      }
+    }
+  ],
+  "summary": {
+    "median_ci_width_aura": 1.0,
+    "median_risk_dims_aura": 4.0,
+    "median_citations_aura": 16.0
+  }
+}

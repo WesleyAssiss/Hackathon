@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+artifacts/
+.git/
+.github/
+.vscode/
+node_modules/
+dist/
+build/
+*.log
+*.md
+!README.md

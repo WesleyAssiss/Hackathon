@@ -1,0 +1,32 @@
+/* AURA War Room — bespoke micro-styles on top of Tailwind */
+
+body {
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(56,189,248,0.10), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 80% 100%, rgba(217,70,239,0.10), transparent 60%);
+}
+
+.vis-network {
+  outline: none !important;
+}
+
+#graph canvas {
+  background: transparent !important;
+}
+
+.persona-cfo      { color: #38bdf8; }
+.persona-cto      { color: #fb923c; }
+.persona-customer { color: #c084fc; }
+.persona-red_team { color: #f87171; }
+.persona-historian{ color: #facc15; }
+
+.kind-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  margin-right: 6px;
+}

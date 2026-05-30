@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>AURA · War Room</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Open Graph / Social sharing -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AURA · War Room — Conselho Adversarial de IA" />
+  <meta property="og:description" content="5 agentes de IA debatem sua decisão estratégica com raciocínio bayesiano. Dossiê calibrado em tempo real." />
+  <meta property="og:image" content="/static/og-preview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AURA · War Room" />
+  <meta name="twitter:description" content="5 agentes de IA debatem sua decisão estratégica." />
+  <meta name="description" content="AURA — Adversarial Unified Reasoning Arena. 5 agentes com personas distintas debatem em rodadas PCDR com árbitro bayesiano calibrado." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/app.css" />
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.0); }
+      50% { box-shadow: 0 0 24px 4px rgba(56, 189, 248, 0.45); }
+    }
+    .glow-active { animation: glow 1.6s ease-in-out infinite; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim-in { animation: slideIn 0.35s ease-out both; }
+    .phase-step.active .phase-dot { background: linear-gradient(135deg, #38bdf8, #d946ef); transform: scale(1.4); }
+    .phase-step.done .phase-dot { background: #22c55e; }
+    .phase-step.active .phase-label { color: #fafafa; font-weight: 700; }
+    .phase-step.done .phase-label { color: #86efac; }
+    .verdict-badge {
+      background: linear-gradient(135deg, var(--vc1), var(--vc2));
+      box-shadow: 0 8px 32px -4px var(--vc1);
+    }
+    /* === Graph theater === */
+    .graph-frame {
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.06), transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(217, 70, 239, 0.05), transparent 55%),
+        linear-gradient(180deg, rgba(15,15,18,0.6), rgba(8,8,12,0.95));
+    }
+    .graph-frame::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.45;
+      background-image:
+        linear-gradient(rgba(82, 82, 91, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(82, 82, 91, 0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+    }
+    .graph-frame canvas { position: relative; z-index: 1; }
+    @keyframes node-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); }
+      100% { box-shadow: 0 0 0 18px rgba(34, 197, 94, 0); }
+    }
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #graph-detail, #graph-stats { animation: fade-in-up 0.22s ease-out both; }
+    .graph-frame button:active { transform: scale(0.92); }
+    /* Round-strip ribbon (above transcript) */
+    .round-ribbon {
+      background: linear-gradient(90deg, rgba(56,189,248,0.06), transparent);
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
+
+  <header class="px-6 py-4 border-b border-zinc-800 flex items-center justify-between backdrop-blur sticky top-0 z-30 bg-zinc-950/85">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500 via-fuchsia-500 to-amber-400 flex items-center justify-center font-black text-zinc-950 text-xl shadow-lg shadow-fuchsia-500/30">A</div>
+      <div>
+        <h1 class="text-base sm:text-lg font-extrabold tracking-tight">AURA · War Room</h1>
+        <p class="text-[11px] sm:text-xs text-zinc-400">Adversarial Unified Reasoning Arena — 5 personas debatem para você decidir melhor</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="mode-pill" class="hidden sm:inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>free · gpt-4o-mini
+      </span>
+      <button id="help-toggle" class="text-xs px-3 py-1.5 rounded-md border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900 transition">Como funciona</button>
+    </div>
+  </header>
+
+  <!-- HOW IT WORKS BANNER (collapsible) -->
+  <section id="help-panel" class="hidden border-b border-zinc-800 bg-gradient-to-b from-zinc-900/40 to-transparent">
+    <div class="max-w-[1600px] mx-auto px-6 py-5 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+      <div class="flex gap-3">
+        <div class="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-300 flex items-center justify-center font-bold flex-shrink-0">1</div>
+        <div><div class="font-semibold text-zinc-200 mb-0.5">5 personas distintas</div><div class="text-zinc-400">CFO, CTO, Cliente, Red-Team, Historiador — cada uma com prompt e viés único.</div></div>
+      </div>
+      <div class="flex gap-3">
+        <div class="w-8 h-8 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 text-fuchsia-300 flex items-center justify-center font-bold flex-shrink-0">2</div>
+        <div><div class="font-semibold text-zinc-200 mb-0.5">Protocolo PCDR</div><div class="text-zinc-400">Propõe → Critica → Defende → Reconcilia, em N rodadas. Argumento fraco morre.</div></div>
+      </div>
+      <div class="flex gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center justify-center font-bold flex-shrink-0">3</div>
+        <div><div class="font-semibold text-zinc-200 mb-0.5">Juiz bayesiano</div><div class="text-zinc-400">Pondera só os claims sobreviventes. Calibra confiança honestamente — sem "fake 95%".</div></div>
+      </div>
+      <div class="flex gap-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 flex items-center justify-center font-bold flex-shrink-0">4</div>
+        <div><div class="font-semibold text-zinc-200 mb-0.5">Dossiê auditável</div><div class="text-zinc-400">Você vê quem defendeu o quê, quem refutou, qual sobreviveu. Decisão rastreável.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPOSER -->
+  <section class="max-w-[1600px] mx-auto px-4 sm:px-6 pt-6">
+    <div class="rounded-2xl border border-zinc-800 p-5 bg-gradient-to-br from-zinc-900/70 to-zinc-900/20 shadow-2xl">
+      <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex-1 min-w-0">
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-2 font-semibold">Decisão estratégica</label>
+          <textarea id="question" rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm focus:outline-none focus:border-sky-500 resize-none"
+            placeholder="Ex: Devemos adquirir a startup ACME por US$ 50M este trimestre?"></textarea>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <button class="example-btn text-[10px] px-2.5 py-1 rounded-md bg-zinc-800/60 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition"
+              data-q="Devemos lançar o pagamento via Pix com IA fraud-detection em produção este trimestre?"
+              data-c="Equipe enxuta de 4 engenheiros. Modelo de IA validado offline com 92% precisão mas zero shadow-mode. SLA Pix exige 99.95% uptime.">
+              💸 Exemplo: lançamento Pix+IA
+            </button>
+            <button class="example-btn text-[10px] px-2.5 py-1 rounded-md bg-zinc-800/60 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition"
+              data-q="Devemos investir 6 meses construindo nosso próprio data warehouse em vez de usar Snowflake?"
+              data-c="Equipe de 12. Custo Snowflake $30k/mês. Sem expertise interna em Iceberg/Trino.">
+              ❌ Exemplo: build-vs-buy óbvio
+            </button>
+            <button class="example-btn text-[10px] px-2.5 py-1 rounded-md bg-zinc-800/60 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 transition"
+              data-q="Devemos aceitar oferta de aquisição de US$ 1B pela empresa avaliada em US$ 50M?"
+              data-c="Equipe quer continuar. Mercado em alta. Comprador é concorrente direto que pode matar o produto.">
+              🤔 Exemplo: dilema executivo
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <label class="block text-[11px] uppercase tracking-wider text-zinc-400 mb-2 font-semibold">Contexto <span class="text-zinc-600 normal-case">(opcional)</span></label>
+          <textarea id="context" rows="2" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm focus:outline-none focus:border-sky-500 resize-none"
+            placeholder="Restrições, números, prazos, contexto de mercado…"></textarea>
+          <div class="flex flex-wrap items-center gap-3 mt-2">
+            <label class="text-xs text-zinc-400 flex items-center gap-1.5">Rodadas
+              <select id="rounds" class="bg-zinc-950 border border-zinc-800 rounded-md text-xs px-2 py-1">
+                <option>2</option><option selected>3</option><option>4</option><option>5</option>
+              </select>
+            </label>
+            <label class="text-xs text-zinc-400 flex items-center gap-1.5">Modo
+              <select id="mode" class="bg-zinc-950 border border-zinc-800 rounded-md text-xs px-2 py-1">
+                <option value="mock">mock (offline)</option>
+                <option value="free" selected>free (GitHub Models)</option>
+                <option value="azure">azure</option>
+              </select>
+            </label>
+            <label class="text-xs text-zinc-400 flex items-center gap-1.5" id="gh-model-wrap">Modelo
+              <select id="gh-model" class="bg-zinc-950 border border-zinc-800 rounded-md text-xs px-2 py-1">
+                <option value="auto" selected>auto (fallback inteligente)</option>
+                <option value="Llama-3.2-11B-Vision-Instruct">Llama-3.2-11B (High · 150/dia) — recomendado</option>
+                <option value="gpt-4o-mini">gpt-4o-mini (Low · 50/dia)</option>
+                <option value="Mistral-small">Mistral-small (High · 150/dia)</option>
+                <option value="Phi-3.5-MoE-instruct">Phi-3.5-MoE (High · 150/dia)</option>
+                <option value="Phi-3-medium-128k-instruct">Phi-3-medium 128k (High · 150/dia)</option>
+                <option value="gpt-4o">gpt-4o (Low · 50/dia, mais caro)</option>
+              </select>
+            </label>
+            <button id="cancel" class="hidden px-4 py-2 text-sm font-bold rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white shadow-lg shadow-rose-500/30 transition">
+              ✕ Cancelar
+            </button>
+            <button id="start" class="ml-auto px-6 py-2 text-sm font-bold rounded-lg bg-gradient-to-r from-sky-500 to-fuchsia-500 hover:from-sky-400 hover:to-fuchsia-400 text-zinc-950 shadow-lg shadow-sky-500/30 transition transform hover:scale-105">
+              ⚡ Convocar Conselho
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE PHASE TIMELINE -->
+  <section id="phase-bar" class="max-w-[1600px] mx-auto px-4 sm:px-6 pt-4 hidden">
+    <div class="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+      <div class="flex items-center justify-between gap-2 sm:gap-4 overflow-x-auto">
+        <div class="phase-step flex items-center gap-2 flex-shrink-0" data-phase="convoke">
+          <span class="phase-dot w-3 h-3 rounded-full bg-zinc-700 transition-all"></span>
+          <span class="phase-label text-[11px] uppercase tracking-wider text-zinc-500 transition-colors">Convocando conselho</span>
+        </div>
+        <div class="h-px bg-zinc-800 flex-1 min-w-[20px]"></div>
+        <div class="phase-step flex items-center gap-2 flex-shrink-0" data-phase="propose">
+          <span class="phase-dot w-3 h-3 rounded-full bg-zinc-700 transition-all"></span>
+          <span class="phase-label text-[11px] uppercase tracking-wider text-zinc-500 transition-colors">Proposições</span>
+        </div>
+        <div class="h-px bg-zinc-800 flex-1 min-w-[20px]"></div>
+        <div class="phase-step flex items-center gap-2 flex-shrink-0" data-phase="critique">
+          <span class="phase-dot w-3 h-3 rounded-full bg-zinc-700 transition-all"></span>
+          <span class="phase-label text-[11px] uppercase tracking-wider text-zinc-500 transition-colors">Críticas & defesas</span>
+        </div>
+        <div class="h-px bg-zinc-800 flex-1 min-w-[20px]"></div>
+        <div class="phase-step flex items-center gap-2 flex-shrink-0" data-phase="referee">
+          <span class="phase-dot w-3 h-3 rounded-full bg-zinc-700 transition-all"></span>
+          <span class="phase-label text-[11px] uppercase tracking-wider text-zinc-500 transition-colors">Juiz pondera</span>
+        </div>
+        <div class="h-px bg-zinc-800 flex-1 min-w-[20px]"></div>
+        <div class="phase-step flex items-center gap-2 flex-shrink-0" data-phase="dossier">
+          <span class="phase-dot w-3 h-3 rounded-full bg-zinc-700 transition-all"></span>
+          <span class="phase-label text-[11px] uppercase tracking-wider text-zinc-500 transition-colors">Dossiê final</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 py-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- LEFT: roster + round-by-round counter -->
+    <aside class="lg:col-span-3 space-y-4 order-2 lg:order-1">
+      <div class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40">
+        <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold flex items-center gap-2">
+          <span>👥 Conselho</span>
+          <span class="ml-auto text-zinc-600 normal-case text-[10px]">claims emitidos</span>
+        </h3>
+        <ul id="roster" class="space-y-2.5 text-sm"></ul>
+      </div>
+
+      <div class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40">
+        <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold">📊 Afunilamento adversarial</h3>
+        <ul id="rounds-list" class="space-y-2.5 text-xs">
+          <li class="text-zinc-600 italic">Rodadas aparecerão aqui…</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- CENTER: VERDICT (top) + GRAPH (bottom) -->
+    <section class="lg:col-span-6 space-y-5 order-1 lg:order-2">
+
+      <!-- VERDICT PANEL -->
+      <div id="verdict-card" class="rounded-2xl border border-zinc-800 p-6 bg-gradient-to-br from-zinc-900/60 to-zinc-900/20 shadow-xl relative overflow-hidden">
+        <div id="verdict-placeholder" class="text-center py-8">
+          <div class="text-5xl mb-3 opacity-40">⚖️</div>
+          <p class="text-sm text-zinc-500">Convoque o conselho para ver o veredicto</p>
+        </div>
+
+        <div id="verdict-content" class="hidden space-y-4">
+          <!-- ① Verdict badge — full width, never overflows -->
+          <div id="verdict-badge" class="verdict-badge rounded-xl px-6 py-5 text-zinc-950 w-full" style="--vc1:#22c55e;--vc2:#16a34a;">
+            <div class="text-[10px] uppercase tracking-widest opacity-80 font-bold mb-1">Veredicto do Conselho</div>
+            <div id="verdict-text" class="text-2xl sm:text-3xl font-black tracking-tight leading-tight break-words hyphens-auto">PROSSEGUIR</div>
+            <div id="verdict-sub" class="text-[11px] opacity-90 font-semibold mt-1"></div>
+          </div>
+
+          <!-- ② Insight paragraph -->
+          <p id="verdict-insight" class="text-sm text-zinc-300 leading-relaxed"></p>
+
+          <!-- ③ Vote breakdown bar -->
+          <div>
+            <div class="flex items-baseline justify-between mb-1.5">
+              <span class="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Voto ponderado do conselho</span>
+              <span id="vote-summary" class="text-[10px] text-zinc-500 mono"></span>
+            </div>
+            <div class="h-3 bg-zinc-800 rounded-full overflow-hidden flex">
+              <div id="vote-pro" class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-700" style="width:0%"></div>
+              <div id="vote-con" class="h-full bg-gradient-to-l from-rose-600 to-rose-400 transition-all duration-700" style="width:0%"></div>
+            </div>
+            <div id="vote-labels" class="flex justify-between text-[10px] mt-1.5 text-zinc-500">
+              <span>✓ <span id="pro-personas" class="text-emerald-400 font-semibold"></span></span>
+              <span><span id="con-personas" class="text-rose-400 font-semibold"></span> ✗</span>
+            </div>
+          </div>
+
+          <!-- ④ Confidence + telemetry -->
+          <div class="text-[10px] text-zinc-500 mono">
+            Convicção do conselho <span id="conf-num" class="text-zinc-300 font-bold"></span>
+            · 95% CI <span id="conf-ci" class="text-zinc-400"></span>
+          </div>
+          <div id="telemetry-row" class="hidden flex-wrap gap-1.5 text-[9px] mono">
+            <span class="px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400" title="Tempo total">⏱ <span id="tel-time" class="text-zinc-200"></span></span>
+            <span class="px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400" title="Chamadas LLM">⚡ <span id="tel-llm" class="text-zinc-200"></span> LLM</span>
+            <span class="px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400" title="Embeddings">🧬 <span id="tel-emb" class="text-zinc-200"></span> embed</span>
+            <span class="px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400" title="Cache hits">💾 <span id="tel-cache" class="text-emerald-200"></span> cached</span>
+          </div>
+
+          <!-- ⑤ Share / Export row -->
+          <div class="flex items-center gap-2 pt-3 border-t border-zinc-800/60">
+            <button id="share-btn" title="Copiar resumo para área de transferência"
+              class="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg bg-zinc-800/70 hover:bg-zinc-700/80 text-zinc-300 hover:text-zinc-100 transition border border-zinc-700/50">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+              Compartilhar
+            </button>
+            <button id="export-json-btn" title="Baixar dossiê como JSON"
+              class="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg bg-zinc-800/70 hover:bg-zinc-700/80 text-zinc-300 hover:text-zinc-100 transition border border-zinc-700/50">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar JSON
+            </button>
+            <span id="share-toast" class="text-[10px] text-emerald-400 opacity-0 transition-opacity duration-500 ml-1">✓ Copiado!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRAPH -->
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 relative overflow-hidden graph-frame" style="min-height: 520px;">
+        <!-- Header bar -->
+        <div class="absolute top-0 left-0 right-0 z-20 px-4 py-2.5 bg-gradient-to-b from-zinc-950/95 to-zinc-950/30 backdrop-blur-sm border-b border-zinc-800/60 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="status-dot" class="w-2 h-2 rounded-full bg-zinc-600 shrink-0"></span>
+            <span class="text-xs text-zinc-200 font-medium truncate" id="status">Aguardando convocação…</span>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button id="graph-fit" title="Centralizar grafo" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4M21 15v4a2 2 0 0 1-2 2h-4"/></svg>
+            </button>
+            <button id="graph-survivors" title="Filtrar sobreviventes" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-emerald-300 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </button>
+            <button id="graph-physics" title="Pausar/retomar física" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+            </button>
+            <div class="w-px h-5 bg-zinc-800 mx-1"></div>
+            <div class="text-[10px] text-zinc-500 mono hidden md:flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>propor</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>criticar</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>defender</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full ring-2 ring-emerald-400 inline-block"></span>sobreviveu</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mini-stats overlay -->
+        <div id="graph-stats" class="absolute bottom-3 left-3 z-10 hidden text-[10px] mono text-zinc-400 bg-zinc-950/70 backdrop-blur-sm rounded-lg px-3 py-2 border border-zinc-800/60 leading-relaxed pointer-events-none">
+          <div><span class="text-zinc-500">nós</span> <span id="stat-nodes" class="text-zinc-200">0</span> · <span class="text-zinc-500">arestas</span> <span id="stat-edges" class="text-zinc-200">0</span></div>
+          <div><span class="text-emerald-400">●</span> <span id="stat-survived" class="text-emerald-300">0</span> sobreviveram · <span class="text-rose-400">●</span> <span id="stat-rejected" class="text-rose-300">0</span> caíram</div>
+        </div>
+        <!-- Detail panel (shown on node hover/click) -->
+        <div id="graph-detail" class="absolute bottom-3 right-3 z-10 hidden max-w-[340px] bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 rounded-lg p-3 text-xs shadow-2xl">
+          <div class="flex items-center gap-2 mb-2">
+            <span id="detail-emoji" class="text-lg"></span>
+            <span id="detail-persona" class="font-semibold text-zinc-100"></span>
+            <span id="detail-kind" class="ml-auto text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded"></span>
+          </div>
+          <div id="detail-statement" class="text-zinc-300 leading-snug mb-2 max-h-32 overflow-y-auto pr-1"></div>
+          <div class="flex items-center justify-between text-[10px] mono text-zinc-500 pt-2 border-t border-zinc-800">
+            <span><span id="detail-conf" class="text-zinc-200"></span> confiança</span>
+            <span><span id="detail-cit" class="text-zinc-200"></span> citações</span>
+            <span id="detail-survived" class="font-semibold"></span>
+          </div>
+        </div>
+        <div id="graph" class="w-full" style="height: 520px;"></div>
+        <div id="graph-empty" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-600 text-sm pointer-events-none px-6 text-center gap-3">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="opacity-30">
+            <circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>
+            <line x1="7.5" y1="7" x2="10.5" y2="11"/><line x1="16.5" y1="7" x2="13.5" y2="11"/><line x1="13.5" y1="13" x2="16.5" y2="17"/><line x1="10.5" y1="13" x2="7.5" y2="17"/>
+          </svg>
+          <div class="text-zinc-400 font-medium">Grafo de argumentação aparece aqui em tempo real</div>
+          <div class="text-[10px] text-zinc-600 max-w-xs">Cada nó = um claim · cor da borda = persona · anel verde = sobreviveu ao crivo · arestas indicam crítica/defesa/concessão</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: surviving args + transcript -->
+    <aside class="lg:col-span-3 space-y-4 order-3">
+      <div id="survivors-card" class="rounded-2xl border border-emerald-500/30 p-5 bg-gradient-to-b from-emerald-500/5 to-zinc-900/40 hidden">
+        <h3 class="text-[11px] uppercase tracking-wider text-emerald-300 mb-2 font-semibold flex items-center gap-1.5">
+          <span>🏆 Argumentos vencedores</span>
+        </h3>
+        <p class="text-[10px] text-zinc-500 mb-3">Sobreviveram a todas as rodadas de crítica adversarial</p>
+        <ul id="survivors" class="space-y-2 text-xs"></ul>
+      </div>
+
+      <div id="dossier-card" class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40 hidden">
+        <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold">📋 Dossiê detalhado</h3>
+        <details open class="text-xs mb-2">
+          <summary class="cursor-pointer text-zinc-300 hover:text-zinc-100 font-semibold py-1">Riscos sobreviventes</summary>
+          <ul id="risks" class="mt-2 space-y-1.5 list-disc list-inside text-zinc-300 break-words"></ul>
+        </details>
+        <details class="text-xs">
+          <summary class="cursor-pointer text-zinc-300 hover:text-zinc-100 font-semibold py-1">Cenários contrafactuais</summary>
+          <ul id="counterfactuals" class="mt-2 space-y-1.5 list-disc list-inside text-zinc-300 break-words"></ul>
+        </details>
+      </div>
+
+      <div class="rounded-2xl border border-zinc-800 p-5 bg-zinc-900/40">
+        <h3 class="text-[11px] uppercase tracking-wider text-zinc-400 mb-3 font-semibold flex items-center justify-between">
+          <span>💬 Transcrição ao vivo</span>
+          <button id="transcript-toggle" class="text-[10px] normal-case font-normal text-zinc-500 hover:text-zinc-300">esconder</button>
+        </h3>
+        <ul id="transcript" class="space-y-3 text-xs max-h-[440px] overflow-y-auto pr-1"></ul>
+      </div>
+    </aside>
+
+  </main>
+
+  <footer class="text-center text-[11px] text-zinc-600 py-6 px-4">
+    Zero dados confidenciais · 100% datasets sintéticos · Provenance auditável por trace
+  </footer>
+
+  <script src="/static/app.js?v=14"></script>
+</body>
+</html>

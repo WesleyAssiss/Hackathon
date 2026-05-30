@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: aura
+metadata:
+  template: aura-hackathon@0.1.0
+infra:
+  provider: bicep
+  path: infra
+  module: main
+services:
+  api:
+    project: .
+    language: python
+    host: containerapp
+    docker:
+      path: Dockerfile
+      context: .
+hooks:
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "→ Generating synthetic corpus..."
+        .\.venv\Scripts\python scripts\gen_synthetic_data.py --out data/synthetic
+        Write-Host "→ Ingesting corpus into Azure AI Search..."
+        $env:AURA_FOUNDRY_PROJECT_ENDPOINT = (azd env get-value searchEndpoint)
+        .\.venv\Scripts\python scripts\ingest_to_foundry.py --create-index --data data/synthetic
+    posix:
+      shell: sh
+      run: |
+        echo "→ Generating synthetic corpus..."
+        ./.venv/bin/python scripts/gen_synthetic_data.py --out data/synthetic
+        echo "→ Ingesting corpus into Azure AI Search..."
+        export AURA_FOUNDRY_PROJECT_ENDPOINT=$(azd env get-value searchEndpoint)
+        ./.venv/bin/python scripts/ingest_to_foundry.py --create-index --data data/synthetic
