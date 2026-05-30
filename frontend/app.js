@@ -68,7 +68,7 @@ const network = new vis.Network(graphContainer, { nodes, edges }, {
     width: 1.8,
     selectionWidth: 2,
     arrows: { to: { enabled: true, scaleFactor: 0.65, type: "arrow" } },
-    smooth: { enabled: true, type: "cubicBezier", forceDirection: "horizontal", roundness: 0.5 },
+    smooth: { enabled: true, type: "cubicBezier", forceDirection: "vertical", roundness: 0.5 },
     font: {
       color: "#a1a1aa", size: 9, face: "JetBrains Mono",
       strokeWidth: 4, strokeColor: "#0a0a0a", align: "middle",
@@ -84,9 +84,9 @@ const network = new vis.Network(graphContainer, { nodes, edges }, {
   layout: {
     hierarchical: {
       enabled: true,
-      direction: "LR",
-      levelSeparation: 150,
-      nodeSpacing: 85,
+      direction: "UD",
+      levelSeparation: 130,
+      nodeSpacing: 110,
       treeSpacing: 80,
       blockShifting: true,
       edgeMinimization: true,
