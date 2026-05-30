@@ -85,9 +85,9 @@ const network = new vis.Network(graphContainer, { nodes, edges }, {
     hierarchical: {
       enabled: true,
       direction: "UD",
-      levelSeparation: 130,
-      nodeSpacing: 110,
-      treeSpacing: 80,
+      levelSeparation: 180,
+      nodeSpacing: 150,
+      treeSpacing: 130,
       blockShifting: true,
       edgeMinimization: true,
       parentCentralization: true,
@@ -315,14 +315,33 @@ function handleClaim(payload) {
   window.__auraFitT = setTimeout(() => {
     try { network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } }); } catch {}
   }, 250);
+  const _EDGE_LABEL = {
+    critique: "⚔ refuta",
+    defend:   "🛡 defende",
+    concede:  "✋ concede",
+    propose:  "",
+  };
+  const _EDGE_COLOR = {
+    critique: "#f43f5e",
+    defend:   "#22c55e",
+    concede:  "#f59e0b",
+    propose:  palette.stroke,
+  };
   (payload.targets || []).forEach(t => {
     if (nodes.get(t)) {
-      const color = palette.stroke;
-      const dashes = payload.kind === "concede" ? [5, 4] : false;
+      const edgeColor = _EDGE_COLOR[payload.kind] || palette.stroke;
+      const dashes = payload.kind === "concede" ? [6, 4] : false;
+      const lbl = _EDGE_LABEL[payload.kind] || "";
       edges.add({
         from: t, to: payload.claim_id,
-        color: { color, opacity: 0.80, highlight: "#fafafa" },
-        width: 2.0 + conf * 1.6,
+        label: lbl,
+        font: {
+          color: edgeColor, size: 11, face: "Inter, system-ui",
+          strokeWidth: 4, strokeColor: "#0a0a0a",
+          align: "middle",
+        },
+        color: { color: edgeColor, opacity: 0.85, highlight: "#fafafa" },
+        width: 2.0 + conf * 1.4,
         dashes,
       });
     }
