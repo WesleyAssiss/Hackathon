@@ -47,3 +47,4 @@ uvicorn*.log
 Prompt.md
 Hackathon.md
 comandos_github.md
+docs/video_script.md
