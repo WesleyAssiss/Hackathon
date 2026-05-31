@@ -22,7 +22,7 @@ Object.entries(PERSONAS).forEach(([id, p]) => {
     <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${p.color}"></span>
     <span class="text-base">${p.emoji}</span>
     <span class="font-semibold" style="color:${p.color}">${p.label}</span>
-    <span class="text-[9px] uppercase px-1.5 py-0.5 rounded ${p.side === "pro" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}">${p.side === "pro" ? "pró" : "contra"}</span>
+    <span class="text-[9px] uppercase px-1.5 py-0.5 rounded ${p.side === "pro" ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"}">${p.side === "pro" ? t('roster.pro') : t('roster.contra')}</span>
     <span class="text-zinc-400 text-xs ml-auto mono" id="count-${id}">0</span>`;
   rosterEl.appendChild(li);
 });
@@ -878,6 +878,11 @@ document.addEventListener('aura:langchange', () => {
   ['customer', 'historian'].forEach(id => {
     const nameEl = document.querySelector(`#roster-${id} .font-semibold`);
     if (nameEl) nameEl.textContent = PERSONAS[id].label;
+  });
+  // Update pro/contra side badges
+  Object.entries(PERSONAS).forEach(([id, p]) => {
+    const badgeEl = document.querySelector(`#roster-${id} .text-\\[9px\\]`);
+    if (badgeEl) badgeEl.textContent = p.side === 'pro' ? t('roster.pro') : t('roster.contra');
   });
   // Re-render rounds list (contains translated strings)
   updateRoundsList(_selectedRounds || undefined);

@@ -171,13 +171,13 @@
             </label>
             <label class="text-xs text-zinc-400 flex items-center gap-1.5" id="gh-model-wrap"><span data-i18n="form.model.label">Modelo</span>
               <select id="gh-model" class="bg-zinc-950 border border-zinc-800 rounded-md text-xs px-2 py-1">
-                <option value="auto" selected>auto (fallback inteligente)</option>
-                <option value="Llama-3.2-11B-Vision-Instruct">Llama-3.2-11B (High · 150/dia) — recomendado</option>
-                <option value="gpt-4o-mini">gpt-4o-mini (Low · 50/dia)</option>
-                <option value="Mistral-small">Mistral-small (High · 150/dia)</option>
-                <option value="Phi-3.5-MoE-instruct">Phi-3.5-MoE (High · 150/dia)</option>
-                <option value="Phi-3-medium-128k-instruct">Phi-3-medium 128k (High · 150/dia)</option>
-                <option value="gpt-4o">gpt-4o (Low · 50/dia, mais caro)</option>
+                <option value="auto" data-i18n="model.auto" selected>auto (fallback inteligente)</option>
+                <option value="Llama-3.2-11B-Vision-Instruct" data-i18n="model.llama">Llama-3.2-11B (High · 150/dia) — recomendado</option>
+                <option value="gpt-4o-mini" data-i18n="model.gpt4omini">gpt-4o-mini (Low · 50/dia)</option>
+                <option value="Mistral-small" data-i18n="model.mistral">Mistral-small (High · 150/dia)</option>
+                <option value="Phi-3.5-MoE-instruct" data-i18n="model.phi35">Phi-3.5-MoE (High · 150/dia)</option>
+                <option value="Phi-3-medium-128k-instruct" data-i18n="model.phi3medium">Phi-3-medium 128k (High · 150/dia)</option>
+                <option value="gpt-4o" data-i18n="model.gpt4o">gpt-4o (Low · 50/dia, mais caro)</option>
               </select>
             </label>
             <button id="cancel" class="hidden px-4 py-2 text-sm font-bold rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white shadow-lg shadow-rose-500/30 transition" data-i18n="form.cancel">
@@ -318,16 +318,16 @@
         <div class="absolute top-0 left-0 right-0 z-20 px-4 py-2.5 bg-gradient-to-b from-zinc-950/95 to-zinc-950/30 backdrop-blur-sm border-b border-zinc-800/60 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 min-w-0">
             <span id="status-dot" class="w-2 h-2 rounded-full bg-zinc-600 shrink-0"></span>
-            <span class="text-xs text-zinc-200 font-medium truncate" id="status">Aguardando convocação…</span>
+            <span class="text-xs text-zinc-200 font-medium truncate" id="status" data-i18n="graph.status.idle">Aguardando convocação…</span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <button id="graph-fit" title="Centralizar grafo" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
+            <button id="graph-fit" data-i18n-title="graph.fit.title" title="Centralizar grafo" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4M21 15v4a2 2 0 0 1-2 2h-4"/></svg>
             </button>
-            <button id="graph-survivors" title="Filtrar sobreviventes" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-emerald-300 transition">
+            <button id="graph-survivors" data-i18n-title="graph.survivors.title" title="Filtrar sobreviventes" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-emerald-300 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
             </button>
-            <button id="graph-physics" title="Pausar/retomar física" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
+            <button id="graph-physics" data-i18n-title="graph.physics.title" title="Pausar/retomar física" class="w-7 h-7 rounded-md hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
             </button>
             <div class="w-px h-5 bg-zinc-800 mx-1"></div>
@@ -421,7 +421,7 @@
     Zero dados confidenciais · 100% datasets sintéticos · Provenance auditável por trace
   </footer>
 
-  <script src="/static/i18n.js?v=1"></script>
-  <script src="/static/app.js?v=16"></script>
+  <script src="/static/i18n.js?v=2"></script>
+  <script src="/static/app.js?v=17"></script>
 </body>
 </html>
