@@ -4,9 +4,9 @@
 const PERSONAS = {
   cfo:       { label: "CFO",       color: "#38bdf8", fill: "#1a4a6a", glow: "rgba(56,189,248,0.55)",  side: "con", emoji: "💰" },
   cto:       { label: "CTO",       color: "#fb923c", fill: "#5c2a08", glow: "rgba(251,146,60,0.55)",  side: "pro", emoji: "🛠️" },
-  customer:  { label: "Cliente",   color: "#c084fc", fill: "#361060", glow: "rgba(192,132,252,0.55)", side: "con", emoji: "🧑" },
-  red_team:  { label: "Red-Team",  color: "#f87171", fill: "#5c1212", glow: "rgba(248,113,113,0.55)", side: "con", emoji: "🚨" },
-  historian: { label: "Historiador", color: "#facc15", fill: "#4a3800", glow: "rgba(250,204,21,0.55)", side: "pro", emoji: "📚" },
+  customer:  { get label() { return window.t ? window.t('persona.customer') : 'Cliente'; }, color: "#c084fc", fill: "#361060", glow: "rgba(192,132,252,0.55)", side: "con", emoji: "\uD83E\uDDD1" },
+  red_team:  { label: "Red-Team",  color: "#f87171", fill: "#5c1212", glow: "rgba(248,113,113,0.55)", side: "con", emoji: "\uD83D\uDEA8" },
+  historian: { get label() { return window.t ? window.t('persona.historian') : 'Historiador'; }, color: "#facc15", fill: "#4a3800", glow: "rgba(250,204,21,0.55)", side: "pro", emoji: "\uD83D\uDCDA" },
 };
 const KIND_GLYPH = { propose: "◆", critique: "✕", defend: "▲", concede: "~" };
 const KIND_LABEL = { propose: "propôs", critique: "criticou", defend: "defendeu", concede: "concedeu" };
@@ -128,9 +128,9 @@ function showDetailPanel(claimId) {
   document.getElementById("detail-conf").textContent = `${Math.round((c.confidence || 0) * 100)}%`;
   document.getElementById("detail-cit").textContent = (c.citations || []).length;
   const survEl = document.getElementById("detail-survived");
-  if (survived.has(claimId)) { survEl.textContent = "✓ sobreviveu"; survEl.style.color = "#34d399"; }
-  else if (rejected.has(claimId)) { survEl.textContent = "✕ caiu"; survEl.style.color = "#fb7185"; }
-  else { survEl.textContent = "○ pendente"; survEl.style.color = "#a1a1aa"; }
+  if (survived.has(claimId)) { survEl.textContent = t('detail.survived'); survEl.style.color = "#34d399"; }
+  else if (rejected.has(claimId)) { survEl.textContent = t('detail.fell'); survEl.style.color = "#fb7185"; }
+  else { survEl.textContent = t('detail.pending'); survEl.style.color = "#a1a1aa"; }
   panel.classList.remove("hidden");
 }
 function hideDetailPanel() {
@@ -221,7 +221,7 @@ function updateRoundsList(totalExpected) {
   const maxIdx = totalExpected != null ? totalExpected - 1
                : (rounds.length > 0 ? Math.max(...rounds) : -1);
   if (maxIdx < 0) {
-    rl.innerHTML = '<li class="text-zinc-600 italic">Rodadas aparecerão aqui…</li>';
+    rl.innerHTML = `<li class="text-zinc-600 italic">${t('sidebar.roundsWaiting')}</li>`;
     return;
   }
   const items = [];
@@ -235,7 +235,7 @@ function updateRoundsList(totalExpected) {
       items.push(`
         <li class="anim-in border-l-2 border-zinc-700 pl-3 py-1">
           <div class="flex items-center gap-2 mb-1">
-            <span class="font-bold text-zinc-200">Rodada ${r + 1}</span>
+            <span class="font-bold text-zinc-200">${t('rounds.title', {n: r + 1})}</span>
             <span class="text-zinc-500 mono text-[10px]">${total} claims</span>
           </div>
           <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden flex">
@@ -244,8 +244,8 @@ function updateRoundsList(totalExpected) {
             <div class="bg-zinc-700" style="width:${total ? (pending/total*100) : 0}%"></div>
           </div>
           <div class="flex justify-between text-[10px] mt-1 mono">
-            <span class="text-emerald-400">✓ ${surv} sobreviveram</span>
-            <span class="text-rose-400">✕ ${rej} caíram</span>
+            <span class="text-emerald-400">${t('rounds.survived', {n: surv})}</span>
+            <span class="text-rose-400">${t('rounds.fell', {n: rej})}</span>
           </div>
         </li>`);
     } else {
@@ -253,10 +253,10 @@ function updateRoundsList(totalExpected) {
       items.push(`
         <li class="border-l-2 border-zinc-700/30 pl-3 py-1 opacity-40">
           <div class="flex items-center gap-2 mb-1">
-            <span class="font-bold text-zinc-500">Rodada ${r + 1}</span>
-            <span class="text-[10px] text-zinc-600 italic">não realizada</span>
+            <span class="font-bold text-zinc-500">${t('rounds.title', {n: r + 1})}</span>
+            <span class="text-[10px] text-zinc-600 italic">${t('rounds.notRun')}</span>
           </div>
-          <div class="text-[10px] text-zinc-600 italic">Consenso atingido antes desta rodada</div>
+          <div class="text-[10px] text-zinc-600 italic">${t('rounds.consensus')}</div>
         </li>`);
     }
   }
@@ -316,9 +316,9 @@ function handleClaim(payload) {
     try { network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } }); } catch {}
   }, 250);
   const _EDGE_LABEL = {
-    critique: "⚔ refuta",
-    defend:   "🛡 defende",
-    concede:  "✋ concede",
+    critique: t('edge.critique'),
+    defend:   t('edge.defend'),
+    concede:  t('edge.concede'),
     propose:  "",
   };
   const _EDGE_COLOR = {
@@ -355,14 +355,11 @@ function handleClaim(payload) {
                 : payload.kind === "defend" ? "bg-emerald-500/15 text-emerald-300"
                 : payload.kind === "concede" ? "bg-amber-500/15 text-amber-300"
                 : "bg-sky-500/15 text-sky-300";
-  const kindLabel = payload.kind === "critique" ? "critica"
-                  : payload.kind === "defend" ? "defende"
-                  : payload.kind === "concede" ? "concede"
-                  : "propõe";
+  const kindLabel = t('kind.short.' + payload.kind);
   const strippedStmt = stripMeta(payload.statement);
   const stmtHtml = strippedStmt
     ? `<div class="text-zinc-300 leading-relaxed break-words">${escapeHtml(strippedStmt)}</div>`
-    : `<div class="text-zinc-500 italic text-[10px]">${payload.kind === "concede" ? "Concessão — argumento aceito sem contestação" : "Resposta interna do conselheiro"}</div>`;
+    : `<div class="text-zinc-500 italic text-[10px]">${payload.kind === "concede" ? t('claim.concession') : t('claim.internal')}</div>`;
   li.innerHTML = `
     <div class="flex items-center gap-2 mb-1">
       <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ${kindCls}">${kindLabel}</span>
@@ -374,7 +371,7 @@ function handleClaim(payload) {
   tEl.appendChild(li);
   tEl.scrollTop = tEl.scrollHeight;
 
-  document.getElementById("status").textContent = `${p.label} ${KIND_LABEL[payload.kind]}…`;
+  document.getElementById("status").textContent = `${p.label} ${t('kind.' + payload.kind)}…`;
   document.getElementById("status-dot").className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
 }
 
@@ -521,7 +518,7 @@ function computeVoteBreakdown() {
 function handleDossier(d) {
   _lastDossier = d;  // persist for share/export
   setPhase("dossier");
-  document.getElementById("status").textContent = "Dossiê pronto. Decisão entregue.";
+  document.getElementById("status").textContent = t('graph.status.done');
   document.getElementById("status-dot").className = "w-2 h-2 rounded-full bg-emerald-400";
 
   // Verdict
@@ -531,21 +528,21 @@ function handleDossier(d) {
   const survCount = survived.size;
   let verdict, vc1, vc2, sub, insight;
   if (survCount === 0) {
-    verdict = "EVIDÊNCIA INSUFICIENTE"; vc1 = "#a1a1aa"; vc2 = "#52525b";
-    sub = "Nenhum argumento sobreviveu ao crivo";
-    insight = `Todos os argumentos iniciais foram <span class="text-zinc-300 font-bold">refutados pelo Red-Team / Juiz</span> — geralmente por baixa fundamentação ou falta de citações. Reformule a pergunta com mais contexto factual, anexe dados de mercado, ou peça uma análise específica em vez de uma decisão binária.`;
+    verdict = t('verdict.noEvidence'); vc1 = "#a1a1aa"; vc2 = "#52525b";
+    sub = t('verdict.noEvidence.sub');
+    insight = t('verdict.noEvidence.insight');
   } else if (conf >= 0.66) {
-    verdict = "PROSSEGUIR"; vc1 = "#22c55e"; vc2 = "#15803d";
-    sub = "Conselho convergiu com alta confiança";
-    insight = `Após ${d.rounds.length} rodada(s) de debate adversarial, o conselho atingiu <span class="text-emerald-300 font-bold">convergência clara</span>. Os argumentos pró sobreviveram à crítica do Red-Team e CFO. Pode avançar com confiança calibrada.`;
+    verdict = t('verdict.proceed'); vc1 = "#22c55e"; vc2 = "#15803d";
+    sub = t('verdict.proceed.sub');
+    insight = t('verdict.proceed.insight', {rounds: d.rounds.length});
   } else if (conf <= 0.34) {
-    verdict = "NÃO PROSSEGUIR"; vc1 = "#f43f5e"; vc2 = "#9f1239";
-    sub = "Conselho convergiu contra a proposta";
-    insight = `Após ${d.rounds.length} rodada(s), os argumentos contra <span class="text-rose-300 font-bold">sobreviveram ao crivo</span>. Avançar agora seria ignorar evidência substantiva. Recomenda-se reformular a proposta ou abandonar.`;
+    verdict = t('verdict.reject'); vc1 = "#f43f5e"; vc2 = "#9f1239";
+    sub = t('verdict.reject.sub');
+    insight = t('verdict.reject.insight', {rounds: d.rounds.length});
   } else {
-    verdict = "PROSSEGUIR COM CAUTELA"; vc1 = "#f59e0b"; vc2 = "#b45309";
-    sub = "Decisão calibrada — divergência genuína";
-    insight = `O conselho está <span class="text-amber-300 font-bold">honestamente dividido</span> (${survCount} argumentos sobreviveram). Em decisões deste nível de risco, unanimidade seria suspeita. Avance só se mitigar os riscos sobreviventes listados — ou peça mais dados antes de decidir.`;
+    verdict = t('verdict.caution'); vc1 = "#f59e0b"; vc2 = "#b45309";
+    sub = t('verdict.caution.sub');
+    insight = t('verdict.caution.insight', {survived: survived.size});
   }
   const badge = document.getElementById("verdict-badge");
   badge.style.setProperty("--vc1", vc1);
@@ -574,13 +571,13 @@ function handleDossier(d) {
     document.getElementById("pro-personas").textContent = v.proSet.join(" · ") || "—";
     document.getElementById("con-personas").textContent = v.conSet.join(" · ") || "—";
   }
-  document.getElementById("vote-summary").textContent = `${survived.size} argumentos sobreviventes`;
+  document.getElementById("vote-summary").textContent = t('verdict.argsCount', {n: survived.size});
   // Exibe convicção na direção da recomendação (não a probabilidade de aprovação bruta),
   // para que o número reflita o quão certo o conselho está do veredito emitido.
   const isAgainst = conf <= 0.34;
   const isPro     = conf >= 0.66;
   const convPct   = isAgainst ? Math.round((1 - conf) * 100) : Math.round(conf * 100);
-  const convLabel = isAgainst ? "contra" : (isPro ? "a favor" : "equilíbrio");
+  const convLabel = isAgainst ? t('verdict.conviction.against') : (isPro ? t('verdict.conviction.for') : t('verdict.conviction.balanced'));
   const [lo, hi] = d.confidence_interval;
   const ciLo = isAgainst ? Math.round((1 - hi) * 100) : Math.round(lo * 100);
   const ciHi = isAgainst ? Math.round((1 - lo) * 100) : Math.round(hi * 100);
@@ -607,7 +604,7 @@ function handleDossier(d) {
   const cnEl = document.getElementById("convergence-note");
   if (cnEl) {
     if (roundsRun < _selectedRounds) {
-      cnEl.textContent = `⚡ Convergência antecipada: o conselho atingiu consenso em ${roundsRun} de ${_selectedRounds} rodadas — mais rodadas não mudariam o resultado.`;
+      cnEl.textContent = t('convergence.note', {run: roundsRun, total: _selectedRounds});
       cnEl.classList.remove("hidden");
     } else {
       cnEl.classList.add("hidden");
@@ -644,12 +641,12 @@ function handleDossier(d) {
   // Dossier details
   document.getElementById("dossier-card").classList.remove("hidden");
   const risksEl = document.getElementById("risks");
-  risksEl.innerHTML = d.surviving_risks.map(r => `<li class="break-words">${escapeHtml(stripMeta(r))}</li>`).join("") || '<li class="text-zinc-500 italic">Nenhum risco residual identificado.</li>';
+  risksEl.innerHTML = d.surviving_risks.map(r => `<li class="break-words">${escapeHtml(stripMeta(r))}</li>`).join("") || `<li class="text-zinc-500 italic">${t('dossier.noRisks')}</li>`;
 
   const cfEl = document.getElementById("counterfactuals");
   cfEl.innerHTML = d.counterfactuals.map(cf =>
     `<li class="break-words"><span class="text-amber-400 font-semibold mono">${(cf.probability*100).toFixed(0)}%</span> · ${escapeHtml(cf.description)}</li>`
-  ).join("") || '<li class="text-zinc-500 italic">Nenhum cenário relevante.</li>';
+  ).join("") || `<li class="text-zinc-500 italic">${t('dossier.noCounterfactuals')}</li>`;
 
   // Todos os argumentos — visão completa: sobreviventes + rejeitados
   const allIds = Object.keys(claimIndex);
@@ -675,10 +672,10 @@ function handleDossier(d) {
     };
     document.getElementById("all-survivors").innerHTML =
       survList.map(_renderClaimLi).join("") ||
-      '<li class="text-zinc-600 italic text-[11px]">Nenhum sobrevivente.</li>';
+      `<li class="text-zinc-600 italic text-[11px]">${t('allClaims.noSurvivors')}</li>`;
     document.getElementById("all-rejected").innerHTML =
       rejList.map(_renderClaimLi).join("") ||
-      '<li class="text-zinc-600 italic text-[11px]">Nenhum rejeitado.</li>';
+      `<li class="text-zinc-600 italic text-[11px]">${t('allClaims.noRejected')}</li>`;
   }
 }
 
@@ -711,7 +708,7 @@ async function startDebate() {
 
   reset();
   setPhase("convoke");
-  document.getElementById("status").textContent = "Convocando conselho…";
+  document.getElementById("status").textContent = t('graph.status.convening');
   document.getElementById("status-dot").className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
 
   const btn = document.getElementById("start");
@@ -765,7 +762,7 @@ async function startDebate() {
     }
   } catch (e) {
     if (e && e.name === "AbortError") {
-      document.getElementById("status").textContent = "Debate cancelado pelo usuário.";
+      document.getElementById("status").textContent = t('graph.status.cancelled');
       document.getElementById("status-dot").className = "w-2 h-2 rounded-full bg-amber-500";
     } else {
       document.getElementById("status").textContent = `Erro: ${(e?.message || e).toString().slice(0,200)}`;
@@ -795,7 +792,7 @@ document.getElementById("help-toggle").addEventListener("click", () => {
 document.getElementById("transcript-toggle").addEventListener("click", (e) => {
   const t = document.getElementById("transcript");
   t.classList.toggle("hidden");
-  e.target.textContent = t.classList.contains("hidden") ? "mostrar" : "esconder";
+  e.target.textContent = t.classList.contains("hidden") ? window.t('transcript.show') : window.t('transcript.hide');
 });
 document.querySelectorAll(".example-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -832,23 +829,23 @@ function _dossierToShareText(d) {
   const isAgainst = conf <= 0.34;
   const isPro = conf >= 0.66;
   const convPct = isAgainst ? Math.round((1 - conf) * 100) : Math.round(conf * 100);
-  const convLabel = isAgainst ? "contra" : (isPro ? "a favor" : "equilíbrio");
+  const convLabel = isAgainst ? t('verdict.conviction.against') : (isPro ? t('verdict.conviction.for') : t('verdict.conviction.balanced'));
   const [lo, hi] = d.confidence_interval || [0, 1];
   const ciLo = isAgainst ? Math.round((1 - hi) * 100) : Math.round(lo * 100);
   const ciHi = isAgainst ? Math.round((1 - lo) * 100) : Math.round(hi * 100);
-  const risks = (d.surviving_risks || []).slice(0, 3).map(r => `  • ${stripMeta(r)}`).join("\n") || "  (nenhum)";
+  const risks = (d.surviving_risks || []).slice(0, 3).map(r => `  • ${stripMeta(r)}`).join("\n") || `  ${t('share.noRisks')}`;
   const rounds = d.rounds?.length ?? "?";
   return [
-    `🏛️ AURA · Veredicto do Conselho`,
+    t('share.title'),
     ``,
-    `Pergunta: "${q}"`,
-    `Veredicto: ${verdict}`,
-    `Convicção: ${convPct}% ${convLabel} (95% CI [${ciLo}%, ${ciHi}%]) · ${rounds} rodadas adversariais`,
+    `${t('share.question')} "${q}"`,
+    `${t('share.verdict')} ${verdict}`,
+    `${t('share.conviction')} ${convPct}% ${convLabel} (95% CI [${ciLo}%, ${ciHi}%]) · ${rounds} ${t('share.rounds')}`,
     ``,
-    `Riscos sobreviventes:`,
+    `${t('share.risks')}`,
     risks,
     ``,
-    `⚡ Powered by AURA — Adversarial Unified Reasoning Arena`,
+    t('share.footer'),
     window.location.href,
   ].join("\n");
 }
@@ -872,4 +869,23 @@ document.getElementById("export-json-btn")?.addEventListener("click", () => {
   const a = document.createElement("a");
   a.href = url; a.download = "aura-dossier.json"; a.click();
   URL.revokeObjectURL(url);
+});
+
+// ---------- i18n lang-change listener -----------------------------------
+// Refreshes dynamic content that was already rendered or stored as state.
+document.addEventListener('aura:langchange', () => {
+  // Update roster labels for translatable personas
+  ['customer', 'historian'].forEach(id => {
+    const nameEl = document.querySelector(`#roster-${id} .font-semibold`);
+    if (nameEl) nameEl.textContent = PERSONAS[id].label;
+  });
+  // Re-render rounds list (contains translated strings)
+  updateRoundsList(_selectedRounds || undefined);
+  // Update transcript toggle button text
+  const transcriptEl = document.getElementById('transcript');
+  const toggleBtn = document.getElementById('transcript-toggle');
+  if (transcriptEl && toggleBtn) {
+    toggleBtn.textContent = transcriptEl.classList.contains('hidden')
+      ? window.t('transcript.show') : window.t('transcript.hide');
+  }
 });
