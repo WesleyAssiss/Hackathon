@@ -1,0 +1,50 @@
+flowchart TD
+    U1["🖥️ War Room\nBrowser"]:::client
+    U2["🤖 Discord Bot\n/debate"]:::client
+
+    GRD1["🛡️ Injection Guard #1\nHTTP boundary"]
+    EP["FastAPI  ·  POST /debates\nSSE Stream"]
+    ORCH["⚙️ Orchestrator  ·  PCDR-Loop\nasyncio fan-out  ·  early-stop H < 0.35"]
+
+    subgraph AGENTS["5-Agent Synthetic Council"]
+        direction LR
+        P1["💰 CFO"] ~~~ P2["🛠️ CTO"] ~~~ P3["🧑 Customer"] ~~~ P4["🚨 Red-Team"] ~~~ P5["📚 Historian"]
+    end
+
+    subgraph IQ["🔷  Microsoft Foundry IQ  —  Required Microsoft IQ Layer"]
+        direction LR
+        AIS["Azure AI Search\npersona-scoped queries\nfoundry_iq_azure.py"]
+        GRD2["🛡️ Injection Guard #2\n+ PII Redactor (Presidio)"]
+    end
+
+    subgraph LLM["LLM Layer"]
+        direction LR
+        AOAI["Azure OpenAI  GPT-4.1\nManaged Identity"]
+        GHM["GitHub Models  GPT-4o / Llama-3.3-70B\nfree tier fallback"]
+    end
+
+    REF["⚖️ Bayesian Referee\nBeta-Binomial  ·  Jeffreys Prior  ·  CI 95%"]
+    DOS["📋 Decision Dossier\nRecommendation  ·  Risks  ·  Citations"]
+    AI["📊 Azure App Insights\n+ OpenTelemetry"]
+
+    OUT1["🖥️ War Room\n← SSE events"]:::out
+    OUT2["🤖 Discord Bot\n← formatted embed"]:::out
+
+    U1 & U2 -->|POST /debates| GRD1
+    GRD1 --> EP --> ORCH --> AGENTS
+    AGENTS -->|persona-scoped query| AIS
+    AIS --> GRD2 -->|sanitized chunks| AGENTS
+    AGENTS <-->|LLM prompt| AOAI
+    AOAI -.->|cascade fallback| GHM
+    AGENTS -->|claims + citations| REF --> DOS
+    DOS --> OUT1
+    DOS --> OUT2
+    EP -.->|telemetry| AI
+
+    classDef client fill:#2e2a1a,color:#fde68a,stroke:#d97706,stroke-width:2px
+    classDef out fill:#1a2e1a,color:#bbf7d0,stroke:#16a34a,stroke-width:2px
+    style IQ fill:#003f87,color:#ffffff,stroke:#0078d4,stroke-width:3px
+    style AGENTS fill:#1e1e2e,color:#e2e8f0,stroke:#7c3aed,stroke-width:2px
+    style LLM fill:#1a2530,color:#e2e8f0,stroke:#0ea5e9,stroke-width:2px
+    style REF fill:#1a2e1a,color:#e2e8f0,stroke:#16a34a,stroke-width:2px
+    style DOS fill:#1a2e1a,color:#e2e8f0,stroke:#22c55e,stroke-width:2px
