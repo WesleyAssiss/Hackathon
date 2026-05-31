@@ -1,164 +1,313 @@
+<div align="center">
+
 # AURA — Adversarial Unified Reasoning Arena
+
+### *The first Synthetic Council with Epistemic Self-Falsification*
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Tests](https://img.shields.io/badge/tests-89%20passed-brightgreen)](backend/tests/)
 [![Ruff](https://img.shields.io/badge/linting-ruff-red)](https://docs.astral.sh/ruff/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Microsoft Foundry IQ](https://img.shields.io/badge/Microsoft-Foundry%20IQ-0078d4?logo=microsoft)](https://aka.ms/iq-series)
+[![Agents League 2026](https://img.shields.io/badge/Agents%20League%202026-Reasoning%20Agents-8b5cf6)](https://aka.ms/AgentsLeague/AISF)
 
-> *"O primeiro Conselho Sintético com Auto-Falsificação Epistêmica."*
-> Submissão para a **Liga dos Agentes 2026** (Microsoft) — trilha **Reasoning Agents (Foundry)**.
+**Submission for the [Agents League Hackathon 2026](https://aka.ms/AgentsLeague/AISF) — Track: Reasoning Agents (Microsoft Foundry IQ)**
 
-**AURA** convoca um **conselho de 5 agentes** com personas, incentivos e modelos mentais conflitantes que debatem adversarialmente sua pergunta estratégica. Um **Referee Bayesiano** calibrado emite um **Decision Dossier** com intervalo de credibilidade 95%, riscos sobreviventes e citations ancoradas.
+</div>
 
-## ⚡ Demo ao vivo
+---
 
-**➡ [yellow-leu-antiques-fioricet.trycloudflare.com](https://yellow-leu-antiques-fioricet.trycloudflare.com)** ← tente agora, sem cadastro
+## 🎯 What is AURA?
 
-Ou rode localmente em 30 segundos:
+AURA assembles a **council of 5 AI agents** — each with conflicting personas, incentives, and mental models — that adversarially debate your strategic question. A calibrated **Bayesian Referee** then emits a **Decision Dossier** with a 95% credibility interval, surviving risks, and anchored citations.
 
-```bash
-pip install -e ".[dev]"
-# cole GITHUB_TOKEN no .env (GitHub Models — gratuito)
-uvicorn aura.api.main:app --port 8000
-# Abra http://localhost:8000
+> **The core insight:** Frontier LLMs suffer from *sycophancy bias* — they agree with the user, emit mono-perspective answers, and provide opaque provenance. AURA inverts this: the AI **actively disagrees**, exposes the evidence chain, and reports its real confidence level.
+
+### Key Metrics
+
+| Metric | AURA | Single Agent |
+|--------|------|-------------|
+| Risk dimensions identified | **4×** more | baseline |
+| Anchored citations | **16×** more | baseline |
+| Block rate (43 red-team attacks) | **≥ 90%** | — |
+| False positives (safety filter) | **0** | — |
+| Test coverage | **89/89** ✅ | — |
+
+---
+
+## 🤖 The Synthetic Council
+
+| Agent | Role | Deliberate Bias |
+|-------|------|-----------------|
+| 💰 CFO | Chief Financial Officer | Capital-conservative |
+| 🛠️ CTO | Chief Technology Officer | Optimistic on feasibility |
+| 🧑 Customer Voice | User representative | Experience-centered |
+| 🚨 Red-Team | Adversarial risk analyst | Falsifies everything it can |
+| 📚 Historian | Real-case analogies | Anchors in precedent |
+
+The **PCDR-Loop** protocol (Propose → Critique → Defend → Refine) with entropy-based early-stop ensures weak arguments are eliminated and only robust ones survive.
+
+---
+
+## 🔷 Microsoft IQ Integration — Foundry IQ
+
+AURA directly integrates **Microsoft Foundry IQ** (Azure AI Search) as its knowledge layer:
+
+```
+backend/aura/knowledge/
+├── foundry_iq_azure.py   ← Azure AI Search client (production)
+├── foundry_iq.py         ← Foundry IQ interface & persona-scoped queries
+└── github_models_knowledge.py  ← Semantic re-ranking fallback (free tier)
 ```
 
-Para zerar a rede: `AURA_MODE=mock` no `.env` → roda 100% offline.
+Each agent queries Foundry IQ with **persona-scoped filters** — the CFO retrieves financial precedents, the Red-Team retrieves failure cases, the Historian retrieves analogous historical events. This ensures every claim is grounded in retrieved knowledge, not hallucinated.
 
-## 🏛️ O que é o Conselho AURA
+```python
+# Each persona queries Foundry IQ with its own perspective filter
+results = await foundry_iq.search(
+    query=claim.content,
+    persona_filter=persona.role,   # e.g. "risk_analyst"
+    top_k=5
+)
+```
 
-| Persona | Papel | Viés deliberado |
-|---------|-------|-----------------|
-| 💰 CFO | Chief Financial Officer sintético | Conservador em capital |
-| 🛠️ CTO | Chief Technology Officer sintético | Otimista em viabilidade |
-| 🧑 Voz do Cliente | Representante de usuários | Centrado em experiência |
-| 🚨 Red-Team | Analista de riscos adversarial | Falsifica tudo que pode |
-| 📚 Historiador | Analogias de casos reais | Âncora em precedentes |
+---
 
-O protocolo **PCDR-Loop** (Propose → Critique → Defend → Refine) + early-stop por entropia garante que argumentos fracos caiam e apenas os robustos sobrevivam.
-
-## Por que isso importa
-
-LLMs de fronteira concordam com o usuário (*sycophancy bias*), emitem respostas mono-perspectiva e oferecem provenance opaca. AURA inverte: a IA **discorda ativamente**, expõe a cadeia de evidências e o nível real de confiança.
-
-## Stack Microsoft
-
-| Camada           | Modo `free` (R$ 0)                                           | Modo `azure` (paga, dentro do crédito)            |
-|------------------|--------------------------------------------------------------|---------------------------------------------------|
-| **Reasoning**    | **GitHub Models** (GPT-4o, Llama-3.3-70B) via PAT do GitHub  | Azure OpenAI GPT-4.1 via Managed Identity         |
-| **Knowledge**    | InMemory + re-ranking semântico (embeddings GitHub Models)   | Foundry IQ (Azure AI Search) com persona filter   |
-| **Observability**| structlog + console JSON                                     | Application Insights + OpenTelemetry              |
-| **Compute**      | Uvicorn local + Cloudflare/ngrok tunnel (grátis)             | Azure Container Apps (Bicep + `azd up`)           |
-| **Segurança**    | injection guard 2 camadas + PII redactor + Red-Team CI gate  | + Managed Identity end-to-end                     |
-
-## Estado atual — 100% MVP entregue
-
-- [x] Schemas canônicos (`Claim`, `DebateTurn`, `DecisionDossier`)
-- [x] 5 personas + orchestrator PCDR-Loop com early-stop por entropia
-- [x] Referee Bayesiano (Beta-Binomial, Jeffreys prior, CI 95%)
-- [x] Azure adapters reais: AOAI + Foundry IQ via Azure AI Search
-- [x] Defense-in-depth: 2× injection guard + PII redactor
-- [x] Red-Team Suite: **43 ataques, ≥90% block rate, 0 falso-positivo**
-- [x] War Room frontend (HTML/CSS/JS zero-build, SSE streaming)
-- [x] Baseline harness: AURA vs single-agent — **4× dimensões de risco, 16× citations**
-- [x] Dockerfile multi-stage + `azd up` (Bicep)
-- [x] Discord bot funcional — slash command `/debate` com SSE streaming e formatação de dossier
-- [x] 89/89 testes verdes, ruff limpo
-
-## Arquitetura
-
-Ver [docs/architecture.md](docs/architecture.md) (diagrama Mermaid completo).
+## 🏗️ Architecture
 
 ```mermaid
 flowchart LR
-    U[War Room] -->|SSE| API[FastAPI + guard]
-    API --> ORCH[Orchestrator PCDR]
-    ORCH --> P[(5 Personas)]
-    P -.-> KS[(Foundry IQ<br/>AI Search)]
-    P -.-> LLM[(Azure OpenAI)]
-    P --> REF[Referee Bayesiano]
-    REF --> DOS[Decision Dossier]
-    DOS --> U
+    U["🖥️ War Room\n(Browser / Discord)"] -->|"POST /debates\nSSE stream"| API["FastAPI\n+ injection guard #1"]
+    API --> ORCH["Orchestrator\nPCDR-Loop"]
+    ORCH -->|fan-out| P1["💰 CFO"]
+    ORCH --> P2["🛠️ CTO"]
+    ORCH --> P3["🧑 Customer"]
+    ORCH --> P4["🚨 Red-Team"]
+    ORCH --> P5["📚 Historian"]
+    P1 & P2 & P3 & P4 & P5 -->|"claims + citations"| REF["Referee\nBayesian Beta-Binomial"]
+    P1 & P2 & P3 & P4 & P5 -.->|"persona-scoped query"| KS[("🔷 Foundry IQ\nAzure AI Search")]
+    P1 & P2 & P3 & P4 & P5 -.->|prompt| LLM[("Azure OpenAI\nGPT-4.1")]
+    KS -.->|chunks| GUARD["injection guard #2\n+ PII redactor"]
+    GUARD -.-> P1 & P2 & P3 & P4 & P5
+    REF --> DOS["📋 Decision Dossier\nrecommendation + CI 95%"]
+    DOS -->|"SSE event: dossier"| U
+    API -.->|telemetry| OTEL["App Insights\n+ OpenTelemetry"]
 ```
 
-## Quick start — 100% gratuito (modo `free`)
+### PCDR-Loop — Sequence Diagram
 
-> Sem cartão de crédito. Sem Azure. **GitHub Models** dá GPT-4o / Llama-3.3-70B de graça com seu PAT do GitHub.
-> Veja [docs/credenciais.md](docs/credenciais.md).
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant O as Orchestrator
+    participant P as Persona (×5)
+    participant R as Bayesian Referee
 
-```powershell
-# 1. Instalar dependências
+    U->>O: strategic question
+    loop until max_rounds or entropy H < 0.35
+        O->>P: PROPOSE — emit initial claim
+        P-->>O: claim + citations
+        O->>P: CRITIQUE — challenge cross-persona
+        P-->>O: critique
+        O->>P: DEFEND — rebut critique
+        P-->>O: defense
+        O->>P: REFINE — integrate feedback
+        P-->>O: refined claim
+        O->>R: score(claim)
+        R-->>O: Beta posterior update
+    end
+    O->>R: build_dossier()
+    R-->>U: DecisionDossier (SSE event)
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Free Tier (`AURA_MODE=free`) | Azure Tier (`AURA_MODE=azure`) |
+|-------|------------------------------|-------------------------------|
+| **Reasoning LLM** | GitHub Models (GPT-4o, Llama-3.3-70B) | Azure OpenAI GPT-4.1 (Managed Identity) |
+| **Knowledge** | In-memory + semantic re-ranking | **Foundry IQ (Azure AI Search)** |
+| **Compute** | Uvicorn local + Cloudflare Tunnel | Azure Container Apps (Bicep) |
+| **Observability** | structlog + console JSON | Application Insights + OpenTelemetry |
+| **Security** | 2× injection guard + PII redactor | + Managed Identity end-to-end |
+| **Bot** | Discord slash command `/debate` | Discord slash command `/debate` |
+
+---
+
+## ✅ Feature Checklist
+
+- [x] Canonical schemas (`Claim`, `DebateTurn`, `DecisionDossier`)
+- [x] 5 agent personas + PCDR-Loop orchestrator with entropy early-stop
+- [x] Bayesian Referee (Beta-Binomial, Jeffreys prior, CI 95%)
+- [x] **Microsoft Foundry IQ** integration via Azure AI Search (`foundry_iq_azure.py`)
+- [x] Azure OpenAI GPT-4.1 adapter with Managed Identity
+- [x] Defense-in-depth: 2× injection guard + Presidio PII redactor
+- [x] Red-Team Suite: **43 attacks, ≥90% block rate, 0 false positives**
+- [x] War Room frontend — zero-build HTML/CSS/JS with SSE streaming + vis-network graph
+- [x] Baseline harness: AURA vs single-agent — **4× risk dimensions, 16× citations**
+- [x] Dockerfile multi-stage + `azd up` (Bicep) one-command deploy
+- [x] Discord bot — `/debate` slash command with SSE streaming and dossier formatting
+- [x] **89/89 tests passing**, ruff clean
+
+---
+
+## ⚡ Quick Start — 100% Free (no credit card needed)
+
+> Uses **GitHub Models** (GPT-4o / Llama-3.3-70B) with your GitHub Personal Access Token. No Azure account required.
+
+### Prerequisites
+
+- Python 3.11+
+- A [GitHub Personal Access Token](https://github.com/settings/tokens) (free, no special scopes needed for GitHub Models)
+
+### Run in 4 steps
+
+```bash
+# 1. Clone and install
+git clone https://github.com/WesleyAssiss/Hackathon.git
+cd Hackathon
 pip install -e ".[dev]"
 
-# 2. Configurar token GitHub (único segredo necessário)
-Copy-Item .env.example .env
-# Edite .env e preencha GITHUB_TOKEN com seu Personal Access Token
+# 2. Configure credentials
+cp .env.example .env
+# Edit .env → set GITHUB_TOKEN=<your_pat>
 
-# 3. Rodar testes (opcional — confirma que tudo está ok)
-pytest -q   # 89/89 em ~1s
+# 3. (Optional) Run tests to verify everything works
+pytest -q    # Expected: 89/89 passed in ~1s
 
-# 4. Subir servidor
+# 4. Start the server
 uvicorn aura.api.main:app --port 8000
+# Open http://localhost:8000
+```
 
-# 5. Abrir no browser
+**PowerShell (Windows):**
+```powershell
+$env:GITHUB_TOKEN="<your_pat>"; $env:AURA_MODE="free"
+uvicorn aura.api.main:app --port 8000
 Start-Process http://localhost:8000
 ```
 
-**Modo offline (zero rede)**:
+**Fully offline mode (zero network):**
 ```bash
 AURA_MODE=mock uvicorn aura.api.main:app --port 8000
 ```
 
-## Demo via CLI
+---
+
+## 💻 CLI Usage
 
 ```powershell
-python -m aura.cli debate "Devemos lançar o PIX+IA em produção este trimestre?" \
-  --context "Equipe de 4 eng. Modelo validado offline com 92% precisão. SLA 99.95%." \
-  --mode free --rounds 3
+python -m aura.cli debate "Should we launch the AI feature to production this quarter?" `
+  --context "Team of 4 engineers. Model validated offline at 92% accuracy. SLA 99.95%." `
+  --mode free `
+  --rounds 3
 ```
 
-## Segurança & Compliance
+---
 
-- Dados **100% sintéticos** com SHA-256 por chunk — ver [DATA_PROVENANCE.md](DATA_PROVENANCE.md)
-- Modelo de ameaça em [SECURITY.md](SECURITY.md)
-- Suite Red-Team executa no CI; falha o build se block-rate < 90%
-- Security headers em todas as respostas: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
+## 🔑 Technical Differentiators
 
-## 🏆 Diferenciais técnicos
+| Feature | How it works |
+|---------|-------------|
+| **PCDR-Loop** | Each claim goes through Propose → Critique → Defend → Refine in parallel (`asyncio.gather`) |
+| **Bayesian Referee** | Beta-Binomial with Jeffreys prior — calibrated confidence, not softmax |
+| **Epistemic early-stop** | Stops when Shannon entropy H < 0.35 — prevents echo-chamber loops |
+| **Cascade fallback** | 6 models queued automatically with cooldown on 429/400 errors |
+| **Dual injection guard** | Regex pre-processing + semantic analysis on retrieved context |
+| **PII redactor** | Masks CPF, email, phone numbers before sending to LLM (Presidio) |
+| **Full audit trail** | Every claim carries `knowledge_source_id` + `chunk_id` for traceability |
+| **Persona-scoped retrieval** | Foundry IQ queries are filtered per agent role — no cross-contamination |
 
-| Feature | Como funciona |
-|---------|--------------|
-| **PCDR-Loop** | Cada claim passa por Proposta → Crítica → Defesa → Refinamento em paralelo (`asyncio.gather`) |
-| **Referee Bayesiano** | Beta-Binomial com prior de Jeffreys — confiança calibrada, não softmax |
-| **Early-stop epistêmico** | Para quando entropia H < 0.35 — evita loops de concordância |
-| **Fallback em cascata** | 6 modelos em fila automática com cooldown por 429/400 |
-| **Injection guard 2×** | Pré-processamento regex + análise semântica no contexto |
-| **PII redactor** | Ofusca CPF, e-mail, telefone antes de enviar ao LLM |
-| **Audit trail** | Cada claim tem `knowledge_source_id` + `chunk_id` rastreáveis |
+---
 
-## Baseline (AURA vs single-agent)
+## 📊 Benchmark (AURA vs Single Agent)
 
-```powershell
+```bash
 python scripts/baseline_harness.py --mode mock --rounds 3 --repeats 2
 cat artifacts/baseline.json
 ```
 
-Resultado esperado: **4× mais dimensões de risco** e **16× mais citations** que um único agente.
+Expected output: **4× more risk dimensions** and **16× more citations** than a single-agent baseline.
 
-## Deploy Azure (opcional — só se quiser usar AOAI real)
+---
+
+## 🔒 Security & Compliance
+
+- All knowledge data is **100% synthetic** with SHA-256 per chunk — see [DATA_PROVENANCE.md](DATA_PROVENANCE.md)
+- Threat model documented in [SECURITY.md](SECURITY.md)
+- Red-Team suite runs in CI — build fails if block rate < 90%
+- Security headers on all responses: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
+- No real user data stored or transmitted at any point
+
+---
+
+## ☁️ Azure Deployment (Production Mode)
+
+Deploy to Azure Container Apps with one command:
 
 ```powershell
 azd auth login
 azd up
 ```
 
-`azd up` provisiona: Identity, Log Analytics, App Insights, ACR, AOAI (gpt-4o), Azure AI Search, Container Apps Environment + App. O hook `postprovision` gera dados sintéticos e ingere no Search.
+`azd up` provisions automatically:
+- Azure Managed Identity
+- Log Analytics + Application Insights
+- Azure Container Registry
+- **Azure OpenAI** (GPT-4.1)
+- **Azure AI Search** (Foundry IQ backend)
+- Container Apps Environment + App
 
-## Pitch
+The `postprovision` hook generates synthetic data and ingests it into Azure AI Search automatically.
 
-Roteiro de 3 min em [docs/pitch.md](docs/pitch.md).
+---
 
-## Licença
+## 📁 Project Structure
 
-MIT — ver [LICENSE](LICENSE).
+```
+AURA/
+├── backend/
+│   └── aura/
+│       ├── agents/          # Orchestrator, 5 personas, referee
+│       ├── api/             # FastAPI app + SSE endpoint
+│       ├── knowledge/       # Foundry IQ (Azure AI Search) + fallbacks
+│       ├── llm/             # Azure OpenAI + GitHub Models clients
+│       ├── safety/          # Injection guard + PII redactor
+│       ├── schemas.py       # Claim, DebateTurn, DecisionDossier
+│       └── config.py        # Environment-based configuration
+├── frontend/
+│   ├── index.html           # War Room UI
+│   ├── app.js               # SSE streaming + vis-network graph
+│   └── app.css              # Styles
+├── data/synthetic/          # Synthetic personas knowledge base
+├── scripts/                 # Baseline harness, data ingestion
+├── infra/                   # Bicep IaC for Azure deployment
+├── docs/                    # Architecture, pitch, credentials guide
+└── backend/tests/           # 89 tests (pytest)
+```
+
+---
+
+## 🔗 Resources
+
+- 📖 [Architecture Diagram](docs/architecture.md)
+- 🔑 [Credentials & Setup Guide](docs/credenciais.md)
+- 🎤 [Pitch Script](docs/pitch.md)
+- 🛡️ [Security Model](SECURITY.md)
+- 📦 [Data Provenance](DATA_PROVENANCE.md)
+
+---
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+Built with ❤️ for the **[Agents League Hackathon 2026](https://aka.ms/AgentsLeague/AISF)** — Microsoft Innovation Studio
+
+</div>
