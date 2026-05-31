@@ -6,7 +6,7 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/tests-89%20passed-brightgreen)](backend/tests/)
+[![Tests](https://img.shields.io/badge/tests-89%25%20passed-brightgreen)](backend/tests/)
 [![Ruff](https://img.shields.io/badge/linting-ruff-red)](https://docs.astral.sh/ruff/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Microsoft Foundry IQ](https://img.shields.io/badge/Microsoft-Foundry%20IQ-0078d4?logo=microsoft)](https://aka.ms/iq-series)
@@ -47,6 +47,182 @@ AURA assembles a **council of 5 AI agents** — each with conflicting personas, 
 | 📚 Historian | Real-case analogies | Anchors in precedent |
 
 The **PCDR-Loop** protocol (Propose → Critique → Defend → Refine) with entropy-based early-stop ensures weak arguments are eliminated and only robust ones survive.
+
+---
+
+## ⚡ Quick Start — Step by Step (Complete Beginner Guide)
+
+> **No credit card needed.** Uses GitHub Models (free tier) with your GitHub account. Works on Windows, Mac, and Linux.
+
+### Step 1 — Install Python
+
+You need Python 3.11 or newer.
+
+**Check if you already have it:**
+```bash
+python --version
+```
+If the output shows `Python 3.11.x` or higher, skip to Step 2.
+
+**If not installed:**
+- Go to **https://www.python.org/downloads/**
+- Click the big yellow **"Download Python 3.x.x"** button
+- Run the installer
+- ⚠️ **Windows users:** On the first screen of the installer, check the box **"Add python.exe to PATH"** before clicking Install
+
+### Step 2 — Download the project
+
+**Option A — Using Git (recommended):**
+```bash
+git clone https://github.com/WesleyAssiss/Hackathon.git
+cd Hackathon
+```
+
+**Option B — Download ZIP (no Git needed):**
+1. Go to https://github.com/WesleyAssiss/Hackathon
+2. Click the green **"Code"** button → **"Download ZIP"**
+3. Extract the ZIP to a folder you can find (e.g. Desktop)
+4. Open a terminal and navigate to it:
+   ```bash
+   # Windows — open "Command Prompt" or "PowerShell" and type:
+   cd %USERPROFILE%\Desktop\Hackathon-Principal
+
+   # Mac / Linux:
+   cd ~/Desktop/Hackathon-Principal
+   ```
+
+### Step 3 — Install dependencies
+
+This installs all Python libraries the project needs:
+
+```bash
+cd backend
+pip install -e ".[dev]"
+```
+
+> If `pip` is not found, try `pip3` instead.  
+> Wait 1–2 minutes while packages download — this is normal.
+
+### Step 4 — Get a free GitHub token
+
+AURA uses **GitHub Models** (GPT-4o, Llama, etc.) which requires a free GitHub account and a Personal Access Token.
+
+1. Sign in at **https://github.com** (create a free account if you do not have one)
+2. Go to **https://github.com/settings/tokens**
+3. Click **"Generate new token"** → **"Generate new token (classic)"**
+4. In the **"Note"** field, type anything: `aura-test`
+5. Set **Expiration** to `30 days`
+6. **Do not check any boxes** — no scopes needed for GitHub Models
+7. Scroll down and click **"Generate token"**
+8. **Copy the token** (it starts with `ghp_...`) — you will not see it again!
+
+### Step 5 — Start the server
+
+Replace `YOUR_TOKEN_HERE` with the token you copied in Step 4.
+
+**Windows (PowerShell):**
+```powershell
+$env:GITHUB_TOKEN="YOUR_TOKEN_HERE"
+$env:AURA_MODE="free"
+python -m uvicorn aura.api.main:app --host 0.0.0.0 --port 8000
+```
+
+**Mac / Linux (Terminal):**
+```bash
+export GITHUB_TOKEN="YOUR_TOKEN_HERE"
+export AURA_MODE="free"
+python -m uvicorn aura.api.main:app --host 0.0.0.0 --port 8000
+```
+
+You should see this in the terminal — that means it worked:
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+### Step 6 — Open the War Room
+
+Open your browser and go to: **http://localhost:8000**
+
+You will see the AURA War Room. Type any strategic question, choose the number of debate rounds, and click **"⚡ Convene Council"**.
+
+**Example questions to try:**
+- `Should we launch a new product before validating product-market fit?`
+- `Is it worth rewriting our entire system in a new language?`
+- `Should we raise funding now or grow organically?`
+
+Watch 5 AI agents debate the question in real-time, then read the Decision Dossier at the end.
+
+---
+
+### Offline / No-token mode (zero network required)
+
+Want to see the UI without a GitHub account? Use mock mode:
+
+**Windows:**
+```powershell
+$env:AURA_MODE="mock"
+python -m uvicorn aura.api.main:app --host 0.0.0.0 --port 8000
+```
+
+**Mac / Linux:**
+```bash
+AURA_MODE=mock python -m uvicorn aura.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Uses simulated responses — no real AI calls, instant results, no token needed.
+
+---
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| `python: command not found` | Use `python3` instead, or reinstall Python with "Add to PATH" checked |
+| `pip: command not found` | Use `pip3`, or run `python -m pip install -e ".[dev]"` |
+| `ModuleNotFoundError: No module named 'aura'` | Run `pip install -e ".[dev]"` inside the `backend/` folder |
+| `Port 8000 already in use` | Add `--port 8001` and open http://localhost:8001 instead |
+| `401 Unauthorized` from GitHub | Token is wrong or expired — generate a new one (Step 4) |
+| `429 Too Many Requests` | GitHub Models free tier rate limit — wait 1 minute and try again |
+| Server starts but page is blank | Hard-refresh: `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) |
+| `cd backend` then `pip install` gives error | Make sure you are inside the `Hackathon/` folder before running `cd backend` |
+
+---
+
+## 💻 CLI Usage (advanced)
+
+Run a debate directly from the terminal without opening the browser:
+
+**Windows PowerShell:**
+```powershell
+$env:GITHUB_TOKEN="YOUR_TOKEN_HERE"
+$env:AURA_MODE="free"
+python -m aura.cli debate "Should we launch the AI feature to production this quarter?" `
+  --context "Team of 4 engineers. Model validated offline at 92% accuracy. SLA 99.95%." `
+  --mode free `
+  --rounds 3
+```
+
+**Mac / Linux:**
+```bash
+export GITHUB_TOKEN="YOUR_TOKEN_HERE"
+python -m aura.cli debate "Should we launch the AI feature to production this quarter?" \
+  --context "Team of 4 engineers. Model validated offline at 92% accuracy. SLA 99.95%." \
+  --mode free \
+  --rounds 3
+```
+
+---
+
+## ✅ Running the Test Suite
+
+Verify everything is working correctly (must be inside `backend/`):
+
+```bash
+cd backend
+pytest -q
+```
+
+Expected result: `89 passed in ~1s`
 
 ---
 
@@ -146,64 +322,11 @@ sequenceDiagram
 - [x] Defense-in-depth: 2× injection guard + Presidio PII redactor
 - [x] Red-Team Suite: **43 attacks, ≥90% block rate, 0 false positives**
 - [x] War Room frontend — zero-build HTML/CSS/JS with SSE streaming + vis-network graph
+- [x] i18n support — 7 languages (PT-BR, EN, ES, FR, DE, ZH, JA)
 - [x] Baseline harness: AURA vs single-agent — **4× risk dimensions, 16× citations**
 - [x] Dockerfile multi-stage + `azd up` (Bicep) one-command deploy
 - [x] Discord bot — `/debate` slash command with SSE streaming and dossier formatting
 - [x] **89/89 tests passing**, ruff clean
-
----
-
-## ⚡ Quick Start — 100% Free (no credit card needed)
-
-> Uses **GitHub Models** (GPT-4o / Llama-3.3-70B) with your GitHub Personal Access Token. No Azure account required.
-
-### Prerequisites
-
-- Python 3.11+
-- A [GitHub Personal Access Token](https://github.com/settings/tokens) (free, no special scopes needed for GitHub Models)
-
-### Run in 4 steps
-
-```bash
-# 1. Clone and install
-git clone https://github.com/WesleyAssiss/Hackathon.git
-cd Hackathon
-pip install -e ".[dev]"
-
-# 2. Configure credentials
-cp .env.example .env
-# Edit .env → set GITHUB_TOKEN=<your_pat>
-
-# 3. (Optional) Run tests to verify everything works
-pytest -q    # Expected: 89/89 passed in ~1s
-
-# 4. Start the server
-uvicorn aura.api.main:app --port 8000
-# Open http://localhost:8000
-```
-
-**PowerShell (Windows):**
-```powershell
-$env:GITHUB_TOKEN="<your_pat>"; $env:AURA_MODE="free"
-uvicorn aura.api.main:app --port 8000
-Start-Process http://localhost:8000
-```
-
-**Fully offline mode (zero network):**
-```bash
-AURA_MODE=mock uvicorn aura.api.main:app --port 8000
-```
-
----
-
-## 💻 CLI Usage
-
-```powershell
-python -m aura.cli debate "Should we launch the AI feature to production this quarter?" `
-  --context "Team of 4 engineers. Model validated offline at 92% accuracy. SLA 99.95%." `
-  --mode free `
-  --rounds 3
-```
 
 ---
 
@@ -225,8 +348,9 @@ python -m aura.cli debate "Should we launch the AI feature to production this qu
 ## 📊 Benchmark (AURA vs Single Agent)
 
 ```bash
-python scripts/baseline_harness.py --mode mock --rounds 3 --repeats 2
-cat artifacts/baseline.json
+cd backend
+python ../scripts/baseline_harness.py --mode mock --rounds 3 --repeats 2
+cat ../artifacts/baseline.json
 ```
 
 Expected output: **4× more risk dimensions** and **16× more citations** than a single-agent baseline.
@@ -280,6 +404,7 @@ AURA/
 ├── frontend/
 │   ├── index.html           # War Room UI
 │   ├── app.js               # SSE streaming + vis-network graph
+│   ├── i18n.js              # Translations (7 languages)
 │   └── app.css              # Styles
 ├── data/synthetic/          # Synthetic personas knowledge base
 ├── scripts/                 # Baseline harness, data ingestion
